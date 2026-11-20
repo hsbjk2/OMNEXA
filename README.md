@@ -25,7 +25,7 @@ The catalogue is intentionally **demo data**: seeded products, prices, stock and
 - Persistent bag and wishlist: guests use local storage, signed-in customers sync to the database on sign-in and while signed in.
 - Search history and recently viewed products, with clear options.
 - Cart drawer, dedicated cart page and order summary.
-- Cash-on-delivery checkout with server-validated prices, stock and totals. Orders are recorded transactionally and stock is decremented.
+- WhatsApp checkout with server-validated prices, stock and totals. Orders are recorded transactionally, stock is reserved, and the customer continues to WhatsApp with a prepared order message.
 - Private order confirmation and tracking pages, authorised by owner session or an unguessable order token.
 
 ### Authentication and account
@@ -162,7 +162,7 @@ Shipping values come from environment configuration (`SHIPPING_FLAT_RATE`, `FREE
 5. Add real store address/coordinates, map URLs, social and marketplace links in admin settings.
 6. Replace demo catalogue content and stand-in photography; update `/credits`.
 7. Have the privacy, terms, shipping and return pages reviewed for the operator's legal entity and jurisdiction; set a real return window and dispatch service levels.
-8. Configure a payment gateway if online payment is required; the current checkout is COD-only.
+8. Keep the WhatsApp order number current in admin settings; checkout uses it for the order handoff. No payment gateway is connected.
 9. Add courier/tracking integration if live shipment tracking is required.
 10. Back up the database and uploads; monitor sessions, uploads and rate limits.
 11. Re-run `npm run typecheck`, `npm run build`, and the manual test checklist below.
@@ -174,7 +174,8 @@ Shipping values come from environment configuration (`SHIPPING_FLAT_RATE`, `FREE
 - Confirm guest bag/wishlist survive refresh and merge into an account at sign-in.
 - Filter/sort/paginate `/shop`; test search suggestions and no-results.
 - Open a product, switch variants, adjust quantity and add to bag.
-- Complete checkout, confirm stock decrements and the order appears in the account.
+- Complete checkout, confirm the order page opens with the prepared WhatsApp message, then verify the order in the account and admin.
+- Mark the order paid in admin, move it through packing/shipping, and confirm cancellation restores stock.
 - Sign in as an admin and verify customer access to `/admin` is denied.
 - Create/edit/delete a product and category; upload an image; toggle demo/featured/coming-soon flags.
 - Update order status; cancel and confirm stock is restored.
@@ -187,7 +188,7 @@ Shipping values come from environment configuration (`SHIPPING_FLAT_RATE`, `FREE
 ## Known limitations
 
 - The catalogue, pricing and stock are demo content; do not treat them as a live offer.
-- Checkout is cash on delivery only. No payment gateway is connected.
+- Checkout saves the order and hands it to WhatsApp. Payment is arranged with the seller in chat; no payment gateway is connected.
 - Demo orders are never dispatched and no courier tracking exists.
 - Return window, refund process, legal entity, jurisdiction and final policy wording are pending operator input.
 - Email delivery and Google sign-in remain inactive until credentials are configured.

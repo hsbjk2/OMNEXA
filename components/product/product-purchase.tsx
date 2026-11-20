@@ -146,10 +146,10 @@ export function ProductPurchase({ product }: { product: ProductDetailData }) {
 
           <div className="mt-4 grid grid-cols-2 gap-2 text-[0.64rem] text-muted">
             <p className="flex items-center gap-1.5">
-              <Check className="size-3.5 text-bright" /> Cash on delivery
+              <Check className="size-3.5 text-bright" /> Order on WhatsApp
             </p>
             <p className="flex items-center gap-1.5">
-              <Check className="size-3.5 text-bright" /> Secure account checkout
+              <Check className="size-3.5 text-bright" /> Server-verified pricing
             </p>
           </div>
         </>

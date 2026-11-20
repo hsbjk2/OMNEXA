@@ -49,6 +49,14 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   REFUNDED: "Refunded",
 };
 
+export const PAYMENT_METHODS = ["WHATSAPP", "COD"] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  WHATSAPP: "WhatsApp order",
+  COD: "Cash on delivery",
+};
+
 export const PRODUCT_STATUSES = ["AVAILABLE", "OUT_OF_STOCK", "COMING_SOON"] as const;
 export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
 

@@ -25,9 +25,46 @@ export function getCloudflareEnv(): CloudflareEnv | null {
 
 let databaseReady: Promise<void> | null = null;
 
+// `CREATE TABLE IF NOT EXISTS` never adds columns to a table that already
+// exists. D1 databases seeded by an earlier release therefore keep their old
+// shape until each new column is added explicitly. Keep this list in sync with
+// any column added to prisma/schema.prisma after the first deployment.
+const COLUMN_MIGRATIONS: Record<
+  string,
+  { name: string; definition: string }[]
+> = {
+  SiteSettings: [
+    {
+      name: "googleBusinessUrl",
+      definition: `"googleBusinessUrl" TEXT NOT NULL DEFAULT ''`,
+    },
+    {
+      name: "whatsappChannelUrl",
+      definition: `"whatsappChannelUrl" TEXT NOT NULL DEFAULT ''`,
+    },
+  ],
+};
+
 async function runStatements(db: D1Database, statements: string[]) {
   for (const statement of statements) {
     await db.prepare(statement).run();
+  }
+}
+
+async function applyColumnMigrations(db: D1Database) {
+  for (const [table, migrations] of Object.entries(COLUMN_MIGRATIONS)) {
+    const { results } = await db
+      .prepare(`PRAGMA table_info("${table}")`)
+      .all<{ name: string }>();
+    const existing = new Set(results.map((column) => column.name));
+
+    for (const migration of migrations) {
+      if (!existing.has(migration.name)) {
+        await db
+          .prepare(`ALTER TABLE "${table}" ADD COLUMN ${migration.definition}`)
+          .run();
+      }
+    }
   }
 }
 
@@ -42,10 +79,14 @@ async function initializeDatabase(db: D1Database) {
     .prepare('SELECT "id" FROM "_freebuff_seed" WHERE "id" = 1')
     .first();
 
-  if (marker) return;
+  if (marker) {
+    await applyColumnMigrations(db);
+    return;
+  }
 
   // D1 starts empty; create the Prisma schema and copy the public catalogue.
   await runStatements(db, D1_SCHEMA_STATEMENTS);
+  await applyColumnMigrations(db);
   await runStatements(db, D1_SEED_STATEMENTS);
   await db.prepare('INSERT OR IGNORE INTO "_freebuff_seed" ("id") VALUES (1)').run();
 }

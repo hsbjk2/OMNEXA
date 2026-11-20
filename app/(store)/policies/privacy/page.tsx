@@ -173,11 +173,13 @@ export default async function PrivacyPolicyPage() {
           heading: "Payments",
           body: (
             <p>
-              Checkout currently supports cash on delivery only. No card,
-              UPI or bank details are collected or stored by this application.
-              If an online payment provider is connected in a live deployment,
-              its own privacy notice and security terms would apply, and this
-              page would need to name that provider.
+              Checkout sends your order to WhatsApp so you can arrange payment
+              directly with the seller. No card, UPI or bank details are
+              collected or stored by this application. The WhatsApp
+              conversation is governed by WhatsApp&apos;s own privacy terms. If
+              an online payment provider is connected in a live deployment, its
+              own privacy notice and security terms would apply, and this page
+              would need to name that provider.
             </p>
           ),
         },

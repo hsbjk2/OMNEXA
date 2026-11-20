@@ -210,8 +210,8 @@ export default async function ProductPage({ params }: { params: Params }) {
               <div className="flex items-start gap-2.5 text-[0.72rem] leading-relaxed text-muted">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-forest/50" strokeWidth={1.4} />
                 <p>
-                  Cash on delivery. Secure checkout with server-verified
-                  pricing.
+                  Order on WhatsApp. We save your order, then open a message
+                  with the seller who confirms payment and delivery.
                 </p>
               </div>
             </div>
@@ -247,8 +247,8 @@ export default async function ProductPage({ params }: { params: Params }) {
                   <p>
                     Deliveries are flat {formatPrice(shipping.rate)}, with
                     complimentary shipping above{" "}
-                    {formatPrice(shipping.threshold)}. Cash on delivery is
-                    available for every order.
+                    {formatPrice(shipping.threshold)}. Orders are completed on
+                    WhatsApp, where the seller shares the payment options.
                   </p>
                   <p>
                     Read the full{" "}

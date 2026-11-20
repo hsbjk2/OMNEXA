@@ -26,6 +26,7 @@ import { NewsletterForm } from "@/components/site/newsletter-form";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 import { WhatsAppIcon } from "@/components/site/social-icons";
+import { buildWhatsAppHref } from "@/lib/whatsapp";
 
 export default async function HomePage() {
   const [home, categoryRows, settings, shipping] = await Promise.all([
@@ -62,12 +63,11 @@ export default async function HomePage() {
     },
   ];
 
-  const whatsappDigits = settings.whatsapp.replace(/[^0-9]/g, "");
-  const whatsappHref = whatsappDigits
-    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
-        "Hi OMNEXA! I would like to place an order and get further details.",
-      )}`
-    : "";
+  const whatsappHref =
+    buildWhatsAppHref(
+      settings.whatsapp,
+      "Hi OMNEXA! I would like to place an order and get further details.",
+    ) ?? "";
 
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -171,11 +171,11 @@ export default async function HomePage() {
               link: "Wholesale enquiries",
             },
             {
-              icon: Check,
-              title: "Cash on delivery",
-              body: "Pay for your order when the parcel reaches you.",
+              icon: MessageCircle,
+              title: "Order on WhatsApp",
+              body: "Send your bag to the seller and arrange payment in chat.",
               href: "/policies/shipping",
-              link: "How delivery works",
+              link: "How ordering works",
             },
             {
               icon: Truck,
@@ -187,7 +187,7 @@ export default async function HomePage() {
               link: "Shipping policy",
             },
             {
-              icon: MessageCircle,
+              icon: Sparkles,
               title: "Questions, answered",
               body: "Write to our team through the contact form.",
               href: "/contact",
@@ -456,7 +456,7 @@ export default async function HomePage() {
                     </p>
                     <p className="flex items-center gap-2.5">
                       <Check className="size-3.5 text-lime/70" />
-                      Cash on delivery on online orders
+                      Orders confirmed on WhatsApp
                     </p>
                   </div>
                 </div>

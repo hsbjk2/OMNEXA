@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { getShippingConfig } from "@/lib/shipping";
+import { getSiteSettings } from "@/lib/settings";
+import { whatsAppDigits } from "@/lib/whatsapp";
 import { checkoutSchema, fieldErrors } from "@/lib/validators";
 import { parseStringArray } from "@/lib/utils";
 import type { ActionState } from "@/lib/action-state";
@@ -45,7 +47,6 @@ export async function placeOrderAction(
     state: formData.get("state"),
     pincode: formData.get("pincode"),
     notes: formData.get("notes") || "",
-    paymentMethod: "COD",
     items: itemsRaw,
     saveAddress: formData.get("saveAddress") === "on",
   });
@@ -55,7 +56,16 @@ export async function placeOrderAction(
   }
 
   const user = await getCurrentUser();
+  const settings = await getSiteSettings();
   const { items, ...details } = parsed.data;
+
+  if (!whatsAppDigits(settings.whatsapp)) {
+    return {
+      status: "error",
+      message:
+        "WhatsApp ordering is not configured right now. Please contact the store so we can take your order.",
+    };
+  }
 
   const productIds = Array.from(new Set(items.map((item) => item.productId)));
   const products = await prisma.product.findMany({
@@ -171,7 +181,7 @@ export async function placeOrderAction(
           subtotal,
           shipping,
           total,
-          paymentMethod: "COD",
+          paymentMethod: "WHATSAPP",
           paymentStatus: "PENDING",
           status: "PENDING",
           accessToken,
@@ -243,7 +253,7 @@ export async function placeOrderAction(
 
   return {
     status: "success",
-    message: "Order placed.",
+    message: "Order saved. Continue on WhatsApp.",
     order: { orderNumber, token: accessToken },
   };
 }

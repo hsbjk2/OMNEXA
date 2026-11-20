@@ -1,12 +1,19 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { WhatsAppIcon } from "@/components/site/social-icons";
+import { buildWhatsAppHref } from "@/lib/whatsapp";
 
 export function WhatsAppCta({ whatsapp }: { whatsapp: string }) {
-  const digits = whatsapp.replace(/[^0-9]/g, "");
-  if (!digits) return null;
-
-  const href = `https://wa.me/${digits}?text=${encodeURIComponent(
+  const pathname = usePathname();
+  const href = buildWhatsAppHref(
+    whatsapp,
     "Hi OMNEXA! I would like to place an order and get further details.",
-  )}`;
+  );
+  if (!href) return null;
+  if (pathname.startsWith("/checkout") || pathname.startsWith("/order/")) {
+    return null;
+  }
 
   return (
     <a

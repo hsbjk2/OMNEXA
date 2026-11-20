@@ -240,8 +240,8 @@ export function CartDrawer() {
                     </p>
                   </div>
                   <p className="mt-1 text-[0.68rem] leading-relaxed text-muted">
-                    Delivery is calculated at checkout. Cash on delivery is
-                    available.
+                    Delivery is calculated at checkout. Orders are completed on
+                    WhatsApp.
                   </p>
                   <div className="mt-4 grid grid-cols-2 gap-2">
                     <Link

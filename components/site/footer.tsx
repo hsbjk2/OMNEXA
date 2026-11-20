@@ -17,6 +17,7 @@ import {
 import { POLICY_LINKS, SITE_DESCRIPTION } from "@/lib/constants";
 import type { StoreSettings } from "@/lib/settings";
 import { formatPrice } from "@/lib/utils";
+import { buildWhatsAppHref } from "@/lib/whatsapp";
 import type { ShippingConfig } from "@/lib/shipping";
 
 type Category = { id: string; name: string; slug: string };
@@ -32,12 +33,11 @@ export function Footer({
 }) {
   const year = new Date().getFullYear();
   const demoEmail = settings.contactEmail.endsWith(".example");
-  const whatsappDigits = settings.whatsapp.replace(/[^0-9]/g, "");
-  const whatsappHref = whatsappDigits
-    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
-        "Hi OMNEXA! I would like to place an order and get further details.",
-      )}`
-    : "";
+  const whatsappHref =
+    buildWhatsAppHref(
+      settings.whatsapp,
+      "Hi OMNEXA! I would like to place an order and get further details.",
+    ) ?? "";
 
   return (
     <footer className="relative overflow-hidden bg-deep text-white">
@@ -261,7 +261,7 @@ export function Footer({
               <div className="flex items-start gap-2 border-t border-white/10 pt-4 text-[0.68rem] leading-relaxed text-white/35">
                 <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-lime/60" />
                 <p>
-                  Cash on delivery · Flat {formatPrice(shipping.rate)} shipping,
+                  Order on WhatsApp · Flat {formatPrice(shipping.rate)} shipping,
                   complimentary above {formatPrice(shipping.threshold)}.
                 </p>
               </div>

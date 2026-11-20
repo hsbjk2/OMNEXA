@@ -14,13 +14,18 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getSiteSettings } from "@/lib/settings";
+import { buildOrderWhatsAppHref } from "@/lib/whatsapp";
 import {
   ORDER_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
   PAYMENT_STATUS_LABELS,
   type OrderStatus,
+  type PaymentMethod,
   type PaymentStatus,
 } from "@/lib/constants";
 import { formatDate, formatPrice } from "@/lib/utils";
+import { WhatsAppHandoff } from "@/components/order/whatsapp-handoff";
 
 export const metadata: Metadata = {
   title: "Order confirmation",
@@ -77,6 +82,7 @@ export default async function OrderConfirmationPage({
   const { orderNumber } = await params;
   const query = await searchParams;
   const token = typeof query.token === "string" ? query.token : "";
+  const handoff = query.handoff === "whatsapp";
   const user = await getCurrentUser();
 
   const order = await prisma.order.findUnique({
@@ -92,6 +98,11 @@ export default async function OrderConfirmationPage({
   if (!tokenMatches && !userMatches) notFound();
 
   const address = parseAddress(order.shippingAddress);
+  const settings = await getSiteSettings();
+  const whatsappHref = buildOrderWhatsAppHref(order, settings.whatsapp);
+  const paymentMethod =
+    PAYMENT_METHOD_LABELS[order.paymentMethod as PaymentMethod] ??
+    order.paymentMethod;
 
   return (
     <section className="bg-soft">
@@ -100,15 +111,15 @@ export default async function OrderConfirmationPage({
           <span className="flex size-16 items-center justify-center rounded-full bg-light text-forest">
             <CheckCircle2 className="size-7" strokeWidth={1.4} />
           </span>
-          <p className="eyebrow mt-6 text-forest/45">Order received</p>
+          <p className="eyebrow mt-6 text-forest/45">Order saved</p>
           <h1 className="mt-3 font-display text-[clamp(2.6rem,6vw,4.8rem)] leading-[0.94] tracking-[-0.04em]">
             Thank you — your order
             <br />
             <span className="italic text-forest/65">is with us.</span>
           </h1>
           <p className="mt-4 max-w-lg text-[0.88rem] leading-relaxed text-muted">
-            We have recorded your demonstration order. It will not be
-            dispatched and no cash will be collected. Your order number is{" "}
+            Send the prepared message to OMNEXA on WhatsApp so the seller can
+            review it and reply with the payment options. Your order number is{" "}
             <span className="font-semibold text-forest">{order.orderNumber}</span>.
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
@@ -118,7 +129,7 @@ export default async function OrderConfirmationPage({
               {ORDER_STATUS_LABELS[order.status as OrderStatus] ?? order.status}
             </span>
             <span className="tag bg-white">
-              Cash on delivery ·{" "}
+              {paymentMethod} ·{" "}
               {PAYMENT_STATUS_LABELS[order.paymentStatus as PaymentStatus] ??
                 order.paymentStatus}
             </span>
@@ -126,13 +137,23 @@ export default async function OrderConfirmationPage({
               Placed {formatDate(order.createdAt)}
             </span>
           </div>
+          <div className="mt-5 flex w-full justify-center">
+            <div className="w-full max-w-xl">
+              <WhatsAppHandoff
+                href={whatsappHref}
+                orderNumber={order.orderNumber}
+                auto={handoff}
+              />
+            </div>
+          </div>
+
           <div className="mt-5 flex max-w-xl items-start gap-2.5 border border-[#e4d9b7] bg-[#faf6e9] p-3.5 text-left text-[0.72rem] leading-relaxed text-[#6a5827]">
             <Info className="mt-0.5 size-4 shrink-0" />
             <p>
-              <strong className="font-semibold">Demonstration order.</strong>{" "}
-              This order is recorded in the demo database and moves through
-              statuses for testing. No parcel will be dispatched and no payment
-              will be collected.
+              <strong className="font-semibold">Demo catalogue.</strong> Product
+              details, pricing and photography are demonstration data. The store
+              confirms availability, delivery and payment on WhatsApp before
+              dispatch.
             </p>
           </div>
         </div>
@@ -195,8 +216,8 @@ export default async function OrderConfirmationPage({
                 </span>
               </div>
               <p className="pt-1 text-[0.65rem] leading-relaxed text-muted">
-                Cash on delivery is the configured payment method. No payment
-                is collected in this demonstration.
+                Payment is arranged directly with the seller on WhatsApp. This
+                website does not collect payment.
               </p>
             </div>
           </div>
@@ -234,18 +255,23 @@ export default async function OrderConfirmationPage({
               <ol className="mt-3 space-y-3 text-[0.78rem] leading-relaxed text-muted">
                 <li className="flex gap-2.5">
                   <span className="mt-1 text-[0.58rem] font-bold text-forest/35">01</span>
-                  The demo order is recorded and stock is reserved in the
+                  Your order is saved and the stock is reserved in the
                   catalogue.
                 </li>
                 <li className="flex gap-2.5">
                   <span className="mt-1 text-[0.58rem] font-bold text-forest/35">02</span>
-                  An administrator can move the order through its statuses in
-                  the admin panel.
+                  Send the prepared message on WhatsApp so the seller receives
+                  your items, total and address.
                 </li>
                 <li className="flex gap-2.5">
                   <span className="mt-1 text-[0.58rem] font-bold text-forest/35">03</span>
-                  No parcel is dispatched and no cash is collected. Statuses are
-                  for this preview only.
+                  The seller reviews the order and replies with the available
+                  payment options.
+                </li>
+                <li className="flex gap-2.5">
+                  <span className="mt-1 text-[0.58rem] font-bold text-forest/35">04</span>
+                  Once payment is confirmed, your order is packed and
+                  dispatched.
                 </li>
               </ol>
               {order.notes && (

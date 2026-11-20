@@ -289,7 +289,7 @@ export function SettingsForm({
             </div>
             <div className="flex justify-between gap-3 border-b border-line pb-2.5">
               <dt className="text-muted">Payment</dt>
-              <dd className="font-medium">Cash on delivery</dd>
+              <dd className="font-medium">Order on WhatsApp</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-muted">Order confirmation</dt>

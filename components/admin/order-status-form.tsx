@@ -57,6 +57,7 @@ export function OrderStatusForm({
           <select
             id="order-status"
             name="status"
+            key={status}
             defaultValue={status}
             className="field"
           >
@@ -74,6 +75,7 @@ export function OrderStatusForm({
           <select
             id="payment-status"
             name="paymentStatus"
+            key={paymentStatus}
             defaultValue={paymentStatus}
             className="field"
           >
@@ -86,8 +88,9 @@ export function OrderStatusForm({
         </div>
       </div>
       <p className="text-[0.66rem] leading-relaxed text-muted">
-        Cancelling an order restores stock to the catalogue. Marking payment
-        paid records cash collected on delivery.
+        Marking payment paid means it was received through the WhatsApp
+        handoff. Cancelling an order restores stock to the catalogue. Dispatch
+        only after payment is confirmed.
       </p>
       <button type="submit" disabled={pending} className="btn btn-forest w-full">
         {pending ? (

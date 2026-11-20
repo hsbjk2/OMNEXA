@@ -14,15 +14,20 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { getSiteSettings } from "@/lib/settings";
+import { buildOrderWhatsAppHref } from "@/lib/whatsapp";
 import {
   ORDER_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
   PAYMENT_STATUS_LABELS,
   type OrderStatus,
+  type PaymentMethod,
   type PaymentStatus,
 } from "@/lib/constants";
 import { addressLines, orderStatusTone, parseOrderAddress } from "@/lib/orders";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { OrderTimeline } from "@/components/account/order-timeline";
+import { WhatsAppIcon } from "@/components/site/social-icons";
 
 export const metadata: Metadata = {
   title: "Order details",
@@ -49,6 +54,11 @@ export default async function AccountOrderDetailPage({
 
   const address = parseOrderAddress(order.shippingAddress);
   const lines = addressLines(address);
+  const settings = await getSiteSettings();
+  const whatsappHref = buildOrderWhatsAppHref(order, settings.whatsapp);
+  const paymentMethod =
+    PAYMENT_METHOD_LABELS[order.paymentMethod as PaymentMethod] ??
+    order.paymentMethod;
 
   return (
     <div>
@@ -84,7 +94,7 @@ export default async function AccountOrderDetailPage({
           <p className="text-[0.68rem] text-muted">
             {PAYMENT_STATUS_LABELS[order.paymentStatus as PaymentStatus] ??
               order.paymentStatus}{" "}
-            · Cash on delivery
+            · {paymentMethod}
           </p>
         </div>
       </div>
@@ -92,9 +102,9 @@ export default async function AccountOrderDetailPage({
       <div className="mt-5 flex items-start gap-2.5 border border-[#e4d9b7] bg-[#faf6e9] p-3.5 text-[0.72rem] leading-relaxed text-[#6a5827]">
         <Info className="mt-0.5 size-4 shrink-0" />
         <p>
-          <strong className="font-semibold">Demonstration order.</strong> This
-          order is recorded in the demo database and moves through statuses for
-          testing. No parcel is dispatched and no payment is collected.
+          <strong className="font-semibold">WhatsApp order.</strong> The store
+          confirms availability, delivery and payment in your WhatsApp chat.
+          Product details and photography are demonstration data.
         </p>
       </div>
 
@@ -191,17 +201,28 @@ export default async function AccountOrderDetailPage({
           <div className="border border-line bg-white p-5">
             <div className="flex items-center gap-2">
               <CreditCard className="size-4 text-forest/45" strokeWidth={1.4} />
-              <p className="eyebrow text-forest/45">Payment</p>
+              <p className="eyebrow text-forest/45">Payment on WhatsApp</p>
             </div>
             <p className="mt-3 text-[0.8rem] leading-relaxed text-muted">
-              Cash on delivery is the configured method. No payment is collected
-              for this demonstration order.
+              The seller replies with the payment options in your WhatsApp chat.
+              No payment is collected on this website. Your order is packed and
+              dispatched after payment is confirmed.
             </p>
             <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-[0.7rem] text-muted">
               <PackageCheck className="size-3.5 text-forest/40" />
               {PAYMENT_STATUS_LABELS[order.paymentStatus as PaymentStatus] ??
                 order.paymentStatus}
             </div>
+            {whatsappHref && (
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="mt-3 inline-flex items-center gap-1.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-forest underline underline-offset-4"
+              >
+                <WhatsAppIcon className="size-3.5" /> Reopen the order chat
+              </a>
+            )}
           </div>
 
           <div className="border border-line bg-light/60 p-5 text-[0.74rem] leading-relaxed text-forest/65">
@@ -209,7 +230,7 @@ export default async function AccountOrderDetailPage({
             <p className="mt-2">
               {order.status === "CANCELLED"
                 ? "This order was cancelled. Any reserved stock has been returned to the catalogue."
-                : "This demonstration order is tracked by status only. No parcel is dispatched and no cash is collected."}
+                : "Orders are packed and dispatched after payment is confirmed with the seller on WhatsApp."}
             </p>
             <Link
               href={`/contact?subject=${encodeURIComponent(`Order ${order.orderNumber}`)}`}

@@ -27,7 +27,7 @@ export function Announcement({ threshold }: { threshold: number }) {
           Complimentary shipping on orders over{" "}
           <span className="text-lime">{formatPrice(threshold)}</span>
           <span className="mx-2 hidden text-white/25 sm:inline">/</span>
-          <span className="hidden sm:inline">Cash on delivery available</span>
+          <span className="hidden sm:inline">Order on WhatsApp</span>
         </p>
       </div>
       <button

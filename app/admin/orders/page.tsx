@@ -6,8 +6,10 @@ import { requireAdmin } from "@/lib/auth";
 import {
   ORDER_STATUSES,
   ORDER_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
   PAYMENT_STATUS_LABELS,
   type OrderStatus,
+  type PaymentMethod,
   type PaymentStatus,
 } from "@/lib/constants";
 import { formatDate, formatPrice } from "@/lib/utils";
@@ -91,7 +93,7 @@ export default async function AdminOrdersPage({
       <AdminPageHeader
         eyebrow="Fulfilment"
         title="Orders"
-        description="Review new orders, confirm stock and move each parcel through its journey. Cash is collected on delivery."
+        description="Review WhatsApp orders, mark payment when it is received, and move each parcel through its journey."
       />
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -147,7 +149,7 @@ export default async function AdminOrdersPage({
           <AdminEmpty
             icon={ShoppingCart}
             title="No orders match"
-            body="Try a different status or search term. New orders will appear here as customers check out."
+            body="Try a different status or search term. New orders will appear here as customers send their bag to WhatsApp."
           />
         ) : (
           <div className="overflow-x-auto">
@@ -174,7 +176,9 @@ export default async function AdminOrdersPage({
                         {order.orderNumber}
                       </Link>
                       <p className="mt-0.5 text-[0.6rem] text-muted/55">
-                        {order.paymentMethod}
+                        {PAYMENT_METHOD_LABELS[
+                          order.paymentMethod as PaymentMethod
+                        ] ?? order.paymentMethod}
                       </p>
                     </td>
                     <td className="px-3 py-3">

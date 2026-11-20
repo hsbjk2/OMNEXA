@@ -122,13 +122,12 @@ export default async function ReturnsPolicyPage() {
           body: (
             <>
               <p>
-                No online payment is connected, so there is no gateway refund
-                flow. Demo cash-on-delivery orders do not collect cash, and no
-                refund is due on them. If an order is marked paid and then
-                cancelled in the admin panel, the operator must decide how the
-                money is returned — for COD that might be a bank transfer using
-                details supplied securely by the customer, but the process is not
-                configured.
+                No online payment gateway is connected, so there is no automatic
+                gateway refund flow. Payments are arranged directly with the
+                seller on WhatsApp; if an order is cancelled after payment, the
+                refund is arranged with the seller in the same chat. The exact
+                process, timing and any fees are not configured on this website
+                and should be confirmed with the seller before paying.
               </p>
               <p>
                 Refund timelines, exchange availability, return shipping costs

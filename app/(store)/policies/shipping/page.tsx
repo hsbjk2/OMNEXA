@@ -54,7 +54,10 @@ export default async function ShippingPolicyPage() {
                   Shipping is recalculated on the server at checkout, not trusted
                   from the browser.
                 </li>
-                <li>Cash on delivery is the only payment method.</li>
+                <li>
+                  Orders are completed on WhatsApp, where the seller confirms
+                  the payment options.
+                </li>
                 <li>
                   This is a demonstration store: orders are recorded and can be
                   managed, but they are not picked, packed or shipped.
@@ -107,19 +110,21 @@ export default async function ShippingPolicyPage() {
           ),
         },
         {
-          heading: "Cash on delivery",
+          heading: "Ordering and payment on WhatsApp",
           body: (
             <>
               <p>
-                Cash on delivery is the only payment option. No card, UPI or
-                bank details are requested, and no payment gateway is connected.
-                Because demo orders are never dispatched, no cash is collected
-                and no delivery agent will contact you.
+                Orders are completed in a WhatsApp conversation with the store.
+                Checkout saves your order and opens WhatsApp with the items,
+                total and delivery address already written out. The seller
+                reviews the message and replies with the available payment
+                options.
               </p>
               <p>
-                When a live store is connected, the operator must publish any
-                COD handling fee, maximum order value and cash-acceptance rules.
-                None of those are set here.
+                No card, UPI or bank details are collected on this website, and
+                no payment gateway is connected. Payment is arranged directly
+                with the seller in the chat. Your order is packed and dispatched
+                after the seller confirms payment.
               </p>
             </>
           ),

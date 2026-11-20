@@ -125,7 +125,6 @@ export const checkoutSchema = z.object({
     .trim()
     .regex(/^[1-9][0-9]{5}$/, "Enter a valid 6-digit PIN code."),
   notes: z.string().trim().max(400, "Use 400 characters or fewer.").optional(),
-  paymentMethod: z.literal("COD"),
   items: z
     .array(
       z.object({

@@ -16,10 +16,14 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { getSiteSettings } from "@/lib/settings";
+import { buildCustomerChatHref } from "@/lib/whatsapp";
 import {
   ORDER_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
   PAYMENT_STATUS_LABELS,
   type OrderStatus,
+  type PaymentMethod,
   type PaymentStatus,
 } from "@/lib/constants";
 import { addressLines, orderStatusTone, parseOrderAddress } from "@/lib/orders";
@@ -27,6 +31,7 @@ import { formatDate, formatPrice } from "@/lib/utils";
 import { AdminPageHeader } from "@/components/admin/ui";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { OrderTimeline } from "@/components/account/order-timeline";
+import { WhatsAppIcon } from "@/components/site/social-icons";
 
 export const metadata: Metadata = {
   title: "Order detail",
@@ -59,6 +64,16 @@ export default async function AdminOrderDetailPage({
   const address = parseOrderAddress(order.shippingAddress);
   const lines = addressLines(address);
   const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const settings = await getSiteSettings();
+  const paymentMethod =
+    PAYMENT_METHOD_LABELS[order.paymentMethod as PaymentMethod] ??
+    order.paymentMethod;
+  const customerChatHref = buildCustomerChatHref(
+    address.phone,
+    order.customerName,
+    order.orderNumber,
+    order.total,
+  );
 
   return (
     <div>
@@ -73,7 +88,7 @@ export default async function AdminOrderDetailPage({
         <AdminPageHeader
           eyebrow="Order detail"
           title={order.orderNumber}
-          description={`Placed ${formatDate(order.createdAt)} · ${itemCount} ${itemCount === 1 ? "item" : "items"} · ${order.paymentMethod}`}
+          description={`Placed ${formatDate(order.createdAt)} · ${itemCount} ${itemCount === 1 ? "item" : "items"} · ${paymentMethod}`}
           actions={
             <>
               <Link
@@ -100,6 +115,7 @@ export default async function AdminOrderDetailPage({
           {PAYMENT_STATUS_LABELS[order.paymentStatus as PaymentStatus] ??
             order.paymentStatus}
         </span>
+        <span className="tag bg-white">{paymentMethod}</span>
         <span className="tag bg-white">
           {order.userId ? "Registered customer" : "Guest checkout"}
         </span>
@@ -233,6 +249,35 @@ export default async function AdminOrderDetailPage({
         </div>
 
         <div className="space-y-5">
+          <section className="border border-[#128c47]/25 bg-[#f1f8f3] p-4">
+            <div className="flex items-center gap-2">
+              <WhatsAppIcon className="size-4 text-[#0e743a]" />
+              <h2 className="text-[0.85rem] font-semibold">WhatsApp handoff</h2>
+            </div>
+            <p className="mt-2 text-[0.72rem] leading-relaxed text-muted">
+              This order was prepared for WhatsApp. Reply with the payment
+              options in the customer&apos;s chat, then mark the payment as{" "}
+              <strong className="font-semibold text-forest">Paid</strong> before
+              packing and dispatching.
+            </p>
+            <p className="mt-2 text-[0.68rem] leading-relaxed text-muted">
+              Store WhatsApp:{" "}
+              <span className="font-medium text-ink">
+                {settings.whatsapp || "Not configured"}
+              </span>
+            </p>
+            {customerChatHref && (
+              <a
+                href={customerChatHref}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="btn mt-3 w-full justify-center bg-[#128c47] text-white hover:bg-[#0e743a]"
+              >
+                <WhatsAppIcon className="size-3.5" /> Message customer
+              </a>
+            )}
+          </section>
+
           <section className="border border-line bg-white">
             <div className="flex items-center gap-2 border-b border-line px-4 py-3.5">
               <CreditCard className="size-4 text-forest/35" strokeWidth={1.5} />

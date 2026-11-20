@@ -5,7 +5,8 @@ import { CheckoutForm } from "@/components/checkout/checkout-form";
 
 export const metadata: Metadata = {
   title: "Checkout",
-  description: "Complete your OMNEXA order with cash on delivery.",
+  description:
+    "Review your OMNEXA order and continue to WhatsApp to arrange payment and delivery.",
   robots: { index: false, follow: false },
 };
 

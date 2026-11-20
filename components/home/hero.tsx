@@ -118,7 +118,7 @@ export function Hero() {
           >
             <span>Retail &amp; wholesale</span>
             <span className="size-1 rounded-full bg-lime/50" />
-            <span>Cash on delivery</span>
+            <span>Order on WhatsApp</span>
             <span className="size-1 rounded-full bg-lime/50" />
             <span>Considered edits</span>
           </motion.div>

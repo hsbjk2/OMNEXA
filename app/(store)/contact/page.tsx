@@ -13,6 +13,7 @@ import {
 import { getCurrentUser } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/settings";
 import { ContactForm } from "@/components/site/contact-form";
+import { buildWhatsAppHref } from "@/lib/whatsapp";
 import {
   FacebookIcon,
   InstagramIcon,
@@ -46,7 +47,10 @@ export default async function ContactPage({
   const subject =
     typeof params.subject === "string" ? params.subject.slice(0, 120) : "";
   const demoEmail = settings.contactEmail.endsWith(".example");
-  const whatsappDigits = settings.whatsapp.replace(/[^0-9]/g, "");
+  const whatsappHref = buildWhatsAppHref(
+    settings.whatsapp,
+    "Hi OMNEXA! I would like to place an order and get further details.",
+  );
 
   return (
     <>
@@ -130,15 +134,13 @@ export default async function ContactPage({
                     </div>
                   </div>
                 )}
-                {whatsappDigits && (
+                {whatsappHref && (
                   <div className="flex items-start gap-3">
                     <WhatsAppIcon className="mt-0.5 size-4 shrink-0 text-forest/40" />
                     <div>
                       <p className="text-[0.72rem] font-semibold text-ink">WhatsApp</p>
                       <a
-                        href={`https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
-                          "Hi OMNEXA! I would like to place an order and get further details.",
-                        )}`}
+                        href={whatsappHref}
                         target="_blank"
                         rel="noreferrer noopener"
                         className="text-muted transition hover:text-forest"

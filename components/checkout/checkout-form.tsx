@@ -12,10 +12,10 @@ import {
   Lock,
   MapPin,
   ShieldCheck,
-  Truck,
 } from "lucide-react";
 import { placeOrderAction, type CheckoutState } from "@/app/actions/checkout";
 import { useStore } from "@/components/providers/store-provider";
+import { WhatsAppIcon } from "@/components/site/social-icons";
 import { formatPrice } from "@/lib/utils";
 
 type Address = {
@@ -82,7 +82,7 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
       router.replace(
         `/order/${state.order.orderNumber}?token=${encodeURIComponent(
           state.order.token,
-        )}`,
+        )}&handoff=whatsapp`,
       );
     }
   }, [state, clearCart, router]);
@@ -130,8 +130,10 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
           <span className="flex size-14 items-center justify-center rounded-full bg-light text-forest">
             <Check className="size-6" />
           </span>
-          <h1 className="mt-5 font-display text-4xl">Order placed.</h1>
-          <p className="mt-2 text-sm text-muted">Taking you to your confirmation…</p>
+          <h1 className="mt-5 font-display text-4xl">Order saved.</h1>
+          <p className="mt-2 text-sm text-muted">
+            Preparing your WhatsApp message…
+          </p>
           <Loader2 className="mt-5 size-5 animate-spin text-forest/40" />
         </div>
       </section>
@@ -168,7 +170,6 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
           className="container-page grid gap-10 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)] lg:gap-16"
         >
           <input type="hidden" name="items" value={itemsJson} />
-          <input type="hidden" name="paymentMethod" value="COD" />
 
           <div className="order-1 space-y-9">
             {state.status === "error" && state.message && (
@@ -177,6 +178,22 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                 role="alert"
               >
                 {state.message}
+              </div>
+            )}
+
+            {!user && (
+              <div className="flex items-start gap-2.5 border border-line bg-white px-4 py-3 text-[0.72rem] leading-relaxed text-muted">
+                <Lock className="mt-0.5 size-3.5 shrink-0 text-forest/45" />
+                <p>
+                  Have an OMNEXA account?{" "}
+                  <Link
+                    href="/login?next=%2Fcheckout"
+                    className="font-semibold text-forest underline underline-offset-2"
+                  >
+                    Sign in
+                  </Link>{" "}
+                  to keep this order in your account, or continue as a guest.
+                </p>
               </div>
             )}
 
@@ -422,23 +439,45 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                 <span className="flex size-7 items-center justify-center rounded-full bg-forest text-[0.6rem] font-bold text-white">
                   {user && addresses.length > 0 ? "04" : "03"}
                 </span>
-                <h2 className="font-display text-2xl">Payment</h2>
+                <h2 className="font-display text-2xl">Payment on WhatsApp</h2>
               </div>
-              <div className="mt-4 border border-forest bg-light/50 p-4">
+              <div className="mt-4 border border-[#128c47]/25 bg-[#f1f8f3] p-4">
                 <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex size-4 items-center justify-center rounded-full border border-forest bg-forest">
-                    <span className="size-1.5 rounded-full bg-lime" />
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-[#128c47] text-white">
+                    <WhatsAppIcon className="size-[18px]" />
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-forest">
-                      Cash on delivery
+                      Send your order to the seller
                     </p>
                     <p className="mt-1 text-[0.74rem] leading-relaxed text-muted">
-                      Pay in cash when your order arrives. No online payment is
-                      collected on this storefront.
+                      We save your order here and open WhatsApp with every item,
+                      the total and your delivery address already written out.
+                      The seller reviews the message and replies with the
+                      payment options.
                     </p>
                   </div>
                 </div>
+                <ol className="mt-3 grid gap-2 border-t border-[#128c47]/15 pt-3 text-[0.66rem] leading-relaxed text-muted sm:grid-cols-3">
+                  <li>
+                    <span className="block text-[0.52rem] font-bold uppercase tracking-[0.13em] text-[#128c47]">
+                      01 · Send
+                    </span>
+                    Your order message opens in WhatsApp.
+                  </li>
+                  <li>
+                    <span className="block text-[0.52rem] font-bold uppercase tracking-[0.13em] text-[#128c47]">
+                      02 · Pay
+                    </span>
+                    The seller shares the payment options in chat.
+                  </li>
+                  <li>
+                    <span className="block text-[0.52rem] font-bold uppercase tracking-[0.13em] text-[#128c47]">
+                      03 · Dispatch
+                    </span>
+                    Your order is packed and sent after payment.
+                  </li>
+                </ol>
               </div>
             </div>
 
@@ -467,8 +506,12 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
 
             <div className="flex items-start gap-2 border border-line bg-white px-4 py-3 text-[0.66rem] leading-relaxed text-muted">
               <MapPin className="mt-0.5 size-3.5 shrink-0 text-forest/45" />
-              This is a demonstration storefront: orders are recorded in the
-              demo database and the catalogue items are marked demo data.
+              <p>
+                Product details, photography and catalogue prices are
+                demonstration data. Your order message is sent to OMNEXA on
+                WhatsApp, where availability, delivery and payment are confirmed
+                before dispatch.
+              </p>
             </div>
           </div>
 
@@ -530,6 +573,10 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                 </div>
               </div>
               <div className="border-t border-line px-5 py-4">
+                <p className="mb-3 text-[0.65rem] leading-relaxed text-muted">
+                  Payment is arranged directly with the seller on WhatsApp.
+                  Nothing is charged on this website.
+                </p>
                 <button
                   type="submit"
                   disabled={pending}
@@ -537,11 +584,12 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                 >
                   {pending ? (
                     <>
-                      <Loader2 className="size-4 animate-spin" /> Placing order…
+                      <Loader2 className="size-4 animate-spin" /> Saving your
+                      order…
                     </>
                   ) : (
                     <>
-                      Place order · {formatPrice(total)}
+                      Continue on WhatsApp · {formatPrice(total)}
                       <ArrowRight className="size-3.5" />
                     </>
                   )}
@@ -551,7 +599,7 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                     <ShieldCheck className="size-3" /> Secure
                   </span>
                   <span className="flex items-center gap-1">
-                    <Truck className="size-3" /> COD
+                    <WhatsAppIcon className="size-3" /> WhatsApp handoff
                   </span>
                 </div>
               </div>

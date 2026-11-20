@@ -91,8 +91,8 @@ export default async function ShopPage({
               <Info className="mt-0.5 size-3.5 shrink-0 text-forest/45" />
               <p>
                 Demo catalogue: product details, imagery, pricing and stock are
-                for this storefront preview. Checkout is fully functional with
-                cash on delivery.
+                for this storefront preview. Checkout sends your bag to
+                WhatsApp, where the seller confirms payment and delivery.
               </p>
             </div>
 

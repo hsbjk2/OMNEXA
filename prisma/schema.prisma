@@ -181,7 +181,7 @@ model Order {
   subtotal        Int
   shipping        Int
   total           Int
-  paymentMethod   String      @default("COD")
+  paymentMethod   String      @default("WHATSAPP")
   paymentStatus   String      @default("PENDING")
   status          String      @default("PENDING")
   accessToken     String      @unique

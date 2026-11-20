@@ -258,7 +258,7 @@ export function CartView() {
                 Continue to checkout <ArrowRight className="size-3.5" />
               </Link>
               <p className="mt-3 text-center text-[0.62rem] leading-relaxed text-muted">
-                Cash on delivery · Secure server-validated checkout
+                Order on WhatsApp · Secure server-validated checkout
               </p>
               <div className="mt-5 flex items-start gap-2 border-t border-line pt-4 text-[0.62rem] leading-relaxed text-muted">
                 <Truck className="mt-0.5 size-3.5 shrink-0 text-forest/40" />

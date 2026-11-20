@@ -131,9 +131,10 @@ export default async function TermsPage() {
                 The store may refuse or cancel an order where an item is
                 unavailable, where a price or listing error is apparent, where
                 the order appears abusive, or where the demonstration data has
-                been reset. Cash on delivery is the only payment method. No
-                online payment gateway is connected and no card details are
-                requested.
+                been reset. Orders are completed on WhatsApp. This website does
+                not collect card details or operate an online payment gateway;
+                the seller confirms the payment options in chat, and dispatch
+                follows payment confirmation.
               </p>
             </>
           ),
