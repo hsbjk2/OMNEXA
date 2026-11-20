@@ -1,0 +1,226 @@
+[
+  {
+    "file": "public/images/editorial/hero-portrait.webp",
+    "pexels_id": 8491204,
+    "source": "https://www.pexels.com/photo/8491204/",
+    "width": 1280,
+    "height": 1600
+  },
+  {
+    "file": "public/images/editorial/hero-still.webp",
+    "pexels_id": 19644201,
+    "source": "https://www.pexels.com/photo/19644201/",
+    "width": 1600,
+    "height": 1600
+  },
+  {
+    "file": "public/images/editorial/about-ritual.webp",
+    "pexels_id": 9774560,
+    "source": "https://www.pexels.com/photo/9774560/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/editorial/editorial-still.webp",
+    "pexels_id": 7428104,
+    "source": "https://www.pexels.com/photo/7428104/",
+    "width": 1600,
+    "height": 1067
+  },
+  {
+    "file": "public/images/editorial/wholesale-work.webp",
+    "pexels_id": 37377914,
+    "source": "https://www.pexels.com/photo/37377914/",
+    "width": 1600,
+    "height": 1067
+  },
+  {
+    "file": "public/images/categories/makeup-cosmetics.webp",
+    "pexels_id": 6659424,
+    "source": "https://www.pexels.com/photo/6659424/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/categories/skincare.webp",
+    "pexels_id": 6977596,
+    "source": "https://www.pexels.com/photo/6977596/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/categories/artificial-jewellery.webp",
+    "pexels_id": 32264846,
+    "source": "https://www.pexels.com/photo/32264846/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/categories/makeup-kits.webp",
+    "pexels_id": 6624063,
+    "source": "https://www.pexels.com/photo/6624063/",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "file": "public/images/categories/beauty-essentials.webp",
+    "pexels_id": 6954639,
+    "source": "https://www.pexels.com/photo/6954639/",
+    "width": 1600,
+    "height": 1067
+  },
+  {
+    "file": "public/images/categories/accessories.webp",
+    "pexels_id": 12352235,
+    "source": "https://www.pexels.com/photo/12352235/",
+    "width": 900,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/facial-oil.webp",
+    "pexels_id": 8490165,
+    "source": "https://www.pexels.com/photo/8490165/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/silk-cream.webp",
+    "pexels_id": 19644201,
+    "source": "https://www.pexels.com/photo/19644201/",
+    "width": 1600,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/eye-cream.webp",
+    "pexels_id": 6963141,
+    "source": "https://www.pexels.com/photo/6963141/",
+    "width": 1600,
+    "height": 1067
+  },
+  {
+    "file": "public/images/products/face-mist.webp",
+    "pexels_id": 7815016,
+    "source": "https://www.pexels.com/photo/7815016/",
+    "width": 1068,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/gua-sha.webp",
+    "pexels_id": 7815025,
+    "source": "https://www.pexels.com/photo/7815025/",
+    "width": 1068,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/lipstick.webp",
+    "pexels_id": 7256073,
+    "source": "https://www.pexels.com/photo/7256073/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/eyeshadow-palette.webp",
+    "pexels_id": 5403547,
+    "source": "https://www.pexels.com/photo/5403547/",
+    "width": 1600,
+    "height": 1067
+  },
+  {
+    "file": "public/images/products/brush-trio.webp",
+    "pexels_id": 4938505,
+    "source": "https://www.pexels.com/photo/4938505/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/ritual-kit.webp",
+    "pexels_id": 13714620,
+    "source": "https://www.pexels.com/photo/13714620/",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/brush-collection.webp",
+    "pexels_id": 12490383,
+    "source": "https://www.pexels.com/photo/12490383/",
+    "width": 1600,
+    "height": 1236
+  },
+  {
+    "file": "public/images/products/vanity-kit.webp",
+    "pexels_id": 4620872,
+    "source": "https://www.pexels.com/photo/4620872/",
+    "width": 1600,
+    "height": 1067
+  },
+  {
+    "file": "public/images/products/gilded-necklace.webp",
+    "pexels_id": 27954777,
+    "source": "https://www.pexels.com/photo/27954777/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/jewellery-set.webp",
+    "pexels_id": 29502924,
+    "source": "https://www.pexels.com/photo/29502924/",
+    "width": 1600,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/pearl-earrings.webp",
+    "pexels_id": 14558499,
+    "source": "https://www.pexels.com/photo/14558499/",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/gold-hoops.webp",
+    "pexels_id": 32797485,
+    "source": "https://www.pexels.com/photo/32797485/",
+    "width": 960,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/claw-clip.webp",
+    "pexels_id": 16037839,
+    "source": "https://www.pexels.com/photo/16037839/",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/vanity-pouch.webp",
+    "pexels_id": 27685202,
+    "source": "https://www.pexels.com/photo/27685202/",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/eau-de-parfum.webp",
+    "pexels_id": 33711974,
+    "source": "https://www.pexels.com/photo/33711974/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/emerald-kit.webp",
+    "pexels_id": 2536009,
+    "source": "https://www.pexels.com/photo/2536009/",
+    "width": 1200,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/body-ritual.webp",
+    "pexels_id": 10765664,
+    "source": "https://www.pexels.com/photo/10765664/",
+    "width": 1067,
+    "height": 1600
+  },
+  {
+    "file": "public/images/products/solstice-pearls.webp",
+    "pexels_id": 36823005,
+    "source": "https://www.pexels.com/photo/36823005/",
+    "width": 1600,
+    "height": 1600
+  }
+]

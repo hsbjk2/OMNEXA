@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+.env
+.env.local
+*.log
+prisma/dev.db
+prisma/dev.db-journal
+public/uploads/*
+!public/uploads/.gitkeep
+.taste-skill
+shots
+.DS_Store
+tsconfig.tsbuildinfo
+/freebuff-sites-build/
+/.open-next/
+/.wrangler/

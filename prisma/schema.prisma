@@ -1,0 +1,268 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String              @id @default(cuid())
+  name             String
+  email            String              @unique
+  passwordHash     String?
+  role             String              @default("CUSTOMER")
+  emailVerified    DateTime?
+  phone            String?
+  image            String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  sessions         Session[]
+  addresses        Address[]
+  orders           Order[]
+  cartItems        CartItem[]
+  wishlist         WishlistItem[]
+  searchHistory    SearchHistory[]
+  recentlyViewed   RecentlyViewed[]
+  waitlistEntries  WaitlistEntry[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  tokenHash    String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
+  userAgent    String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  tokenHash String   @unique
+  type      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, type])
+  @@index([expiresAt])
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String   @default("Home")
+  fullName  String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String
+  image       String
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id               String         @id @default(cuid())
+  name             String
+  slug             String         @unique
+  description      String
+  details          String?
+  categoryId       String
+  category         Category       @relation(fields: [categoryId], references: [id])
+  images           String         @default("[]")
+  price            Int
+  originalPrice    Int?
+  sku              String         @unique
+  stock            Int            @default(0)
+  status           String         @default("AVAILABLE")
+  isFeatured       Boolean        @default(false)
+  isBestSeller     Boolean        @default(false)
+  isNewArrival     Boolean        @default(false)
+  isPublished      Boolean        @default(true)
+  isDemo           Boolean        @default(false)
+  variantLabel     String?
+  variantOptions   String?
+  viewCount        Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  cartItems        CartItem[]
+  wishlistItems    WishlistItem[]
+  recentlyViewed   RecentlyViewed[]
+  waitlistEntries  WaitlistEntry[]
+  orderItems       OrderItem[]
+
+  @@index([categoryId])
+  @@index([status, isPublished])
+  @@index([createdAt])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant   String   @default("")
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId, variant])
+  @@index([userId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query     String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model RecentlyViewed {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  viewedAt  DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId, viewedAt])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerName    String
+  email           String
+  phone           String
+  shippingAddress String
+  subtotal        Int
+  shipping        Int
+  total           Int
+  paymentMethod   String      @default("COD")
+  paymentStatus   String      @default("PENDING")
+  status          String      @default("PENDING")
+  accessToken     String      @unique
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String
+  variant     String   @default("")
+  sku         String
+  price       Int
+  quantity    Int
+  image       String
+
+  @@index([orderId])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model WaitlistEntry {
+  id        String    @id @default(cuid())
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  email     String
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime  @default(now())
+  notifiedAt DateTime?
+
+  @@unique([productId, email])
+  @@index([productId])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  type      String   @default("GENERAL")
+  status    String   @default("NEW")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model SiteSettings {
+  id             String   @id @default("site")
+  businessName   String   @default("OMNEXA")
+  addressLine1   String   @default("")
+  addressLine2   String   @default("")
+  city           String   @default("")
+  state          String   @default("")
+  pincode        String   @default("")
+  contactEmail   String   @default("care@omnexa.example")
+  contactPhone   String   @default("")
+  whatsapp       String   @default("")
+  mapEmbedUrl    String   @default("")
+  mapLink        String   @default("")
+  googleBusinessUrl String @default("")
+  whatsappChannelUrl String @default("")
+  instagramUrl   String   @default("")
+  facebookUrl    String   @default("")
+  amazonUrl      String   @default("")
+  flipkartUrl    String   @default("")
+  updatedAt      DateTime @updatedAt
+}
