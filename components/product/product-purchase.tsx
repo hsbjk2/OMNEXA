@@ -1,13 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Heart, Minus, Plus, ShoppingBag } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  Heart,
+  Minus,
+  Plus,
+  ShoppingBag,
+} from "lucide-react";
 import { useStore } from "@/components/providers/store-provider";
 import { WaitlistForm } from "@/components/product/waitlist-form";
-import { formatPrice } from "@/lib/utils";
+import { WhatsAppIcon } from "@/components/site/social-icons";
+import { buildProductEnquiryHref } from "@/lib/whatsapp";
+import { formatPrice, isValidHttpUrl } from "@/lib/utils";
 import type { ProductDetailData } from "@/lib/products";
 
-export function ProductPurchase({ product }: { product: ProductDetailData }) {
+export function ProductPurchase({
+  product,
+  whatsapp,
+  productUrl,
+  imageUrl,
+}: {
+  product: ProductDetailData;
+  whatsapp: string;
+  productUrl: string;
+  imageUrl: string | null;
+}) {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
   const [variant, setVariant] = useState(
     product.variantLabel && product.variantOptions.length > 0
@@ -18,6 +37,14 @@ export function ProductPurchase({ product }: { product: ProductDetailData }) {
   const wishlisted = isWishlisted(product.id);
   const comingSoon = product.status === "COMING_SOON";
   const soldOut = !comingSoon && (product.status !== "AVAILABLE" || product.stock < 1);
+  const whatsappHref = buildProductEnquiryHref(whatsapp, {
+    name: product.name,
+    variant,
+    quantity,
+    price: comingSoon ? null : product.price,
+    productUrl,
+    imageUrl,
+  });
 
   return (
     <div>
@@ -153,6 +180,55 @@ export function ProductPurchase({ product }: { product: ProductDetailData }) {
             </p>
           </div>
         </>
+      )}
+
+      {whatsappHref && (
+        <div className="mt-4">
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline h-12 w-full border-[#128c47]/30 text-[#0e743a] hover:border-[#128c47] hover:bg-[#f1f8f3]"
+          >
+            <WhatsAppIcon className="size-4" />
+            {comingSoon
+              ? "Ask about this piece"
+              : soldOut
+                ? "Ask about availability"
+                : "Order on WhatsApp"}
+          </a>
+          <p className="mt-2 text-center text-[0.62rem] leading-relaxed text-muted/70">
+            {comingSoon
+              ? "This opens a WhatsApp enquiry. Launch details and pricing will be confirmed by the seller in chat."
+              : "This opens a WhatsApp enquiry. Availability, delivery charges and payment are confirmed by the seller in chat."}
+          </p>
+        </div>
+      )}
+
+      {(isValidHttpUrl(product.amazonUrl ?? "") ||
+        isValidHttpUrl(product.flipkartUrl ?? "")) && (
+        <div className="mt-4 grid gap-2 border-t border-line pt-4 sm:grid-cols-2">
+          {isValidHttpUrl(product.amazonUrl ?? "") && (
+            <a
+              href={product.amazonUrl ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-outline"
+            >
+              Buy on Amazon <ExternalLink className="size-3.5" />
+            </a>
+          )}
+          {isValidHttpUrl(product.flipkartUrl ?? "") && (
+            <a
+              href={product.flipkartUrl ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-outline"
+            >
+              Buy on Flipkart <ExternalLink className="size-3.5" />
+            </a>
+          )}
+        </div>
       )}
     </div>
   );

@@ -23,11 +23,11 @@ import {
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Contact OMNEXA about orders, products, retail availability or wholesale enquiries.",
+    "Contact OMNEXA about products, retail availability or wholesale enquiries.",
   openGraph: {
     title: "Contact OMNEXA",
     description:
-      "Questions about an order, a product or a wholesale enquiry — write to the OMNEXA team.",
+      "Questions about a product or a wholesale enquiry — write to the OMNEXA team.",
   },
 };
 
@@ -49,7 +49,7 @@ export default async function ContactPage({
   const demoEmail = settings.contactEmail.endsWith(".example");
   const whatsappHref = buildWhatsAppHref(
     settings.whatsapp,
-    "Hi OMNEXA! I would like to place an order and get further details.",
+    "Hi OMNEXA! I would like to enquire about your products and get further details.",
   );
 
   return (
@@ -67,16 +67,24 @@ export default async function ContactPage({
             </div>
             <div className="max-w-md lg:justify-self-end">
               <p className="text-[0.92rem] leading-relaxed text-muted">
-                Order questions, product notes, retail availability or a
-                wholesale enquiry — the same inbox reaches our team.
+                Product questions, retail availability or a wholesale enquiry —
+                the same inbox reaches our team. For a specific purchase, send
+                us the product or your bag as a WhatsApp enquiry.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link href="/wholesale" className="btn btn-outline">
                   Wholesale enquiries <ArrowUpRight className="size-3.5" />
                 </Link>
-                <Link href="/account/orders" className="btn-quiet">
-                  Track an order <ArrowRight className="size-3.5" />
-                </Link>
+                {whatsappHref && (
+                  <a
+                    href={whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-quiet"
+                  >
+                    Message on WhatsApp <ArrowRight className="size-3.5" />
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -148,7 +156,7 @@ export default async function ContactPage({
                         {settings.whatsapp}
                       </a>
                       <p className="mt-0.5 text-[0.62rem] uppercase tracking-[0.1em] text-muted/55">
-                        Orders &amp; further details
+                        Enquiries &amp; further details
                       </p>
                     </div>
                   </div>
@@ -238,8 +246,8 @@ export default async function ContactPage({
                 <div className="mt-3 border border-dashed border-line bg-soft/60 p-4">
                   <p className="text-[0.8rem] leading-relaxed text-muted">
                     The physical store location is being finalised. No address
-                    has been published yet — online orders are open, and the real
-                    address will appear here once confirmed.
+                    has been published yet — WhatsApp ordering is open, and the
+                    real address will appear here once confirmed.
                   </p>
                 </div>
               )}

@@ -6,11 +6,11 @@ import { getSiteSettings } from "@/lib/settings";
 export const metadata: Metadata = {
   title: "Privacy policy",
   description:
-    "How the OMNEXA demonstration store handles account, order and browsing information, and the choices available to you.",
+    "How the OMNEXA demonstration store handles account, enquiry and browsing information, and the choices available to you.",
   openGraph: {
     title: "Privacy policy — OMNEXA",
     description:
-      "Account, order and browsing data in the OMNEXA demonstration storefront, explained plainly.",
+      "Account, enquiry and browsing data in the OMNEXA demonstration storefront, explained plainly.",
   },
 };
 
@@ -86,10 +86,11 @@ export default async function PrivacyPolicyPage() {
                   browser&apos;s local storage.
                 </li>
                 <li>
-                  <strong>Order details</strong> — name, email, phone number,
-                  delivery address, items, quantities, totals, order notes,
-                  order status, payment status and an unguessable access token
-                  used to view the confirmation.
+                  <strong>Enquiry preparation</strong> — the name, mobile number
+                  and delivery details you enter are used to prepare a WhatsApp
+                  message. They are not saved as an order. If you are signed in
+                  and choose to save the address, it is stored in your account
+                  address book.
                 </li>
                 <li>
                   <strong>Messages</strong> — anything you send through the
@@ -131,8 +132,8 @@ export default async function PrivacyPolicyPage() {
                 Signing in moves guest shopping state into your account. You can
                 clear guest state at any time through the clear options on the
                 wishlist and account screens, or by clearing site data in your
-                browser. Blocking the session cookie will prevent sign-in,
-                checkout and the account area from working.
+                browser. Blocking the session cookie will prevent sign-in and the
+                saved account area from working.
               </p>
             </>
           ),
@@ -149,8 +150,9 @@ export default async function PrivacyPolicyPage() {
                   across visits;
                 </li>
                 <li>
-                  validate stock and prices, record an order and show its
-                  confirmation and status;
+                  validate catalogue prices and stock while preparing your
+                  WhatsApp enquiry, and save a delivery address you choose to
+                  keep;
                 </li>
                 <li>
                   respond to enquiries and, where you asked, manage a waitlist or
@@ -173,13 +175,12 @@ export default async function PrivacyPolicyPage() {
           heading: "Payments",
           body: (
             <p>
-              Checkout sends your order to WhatsApp so you can arrange payment
-              directly with the seller. No card, UPI or bank details are
-              collected or stored by this application. The WhatsApp
-              conversation is governed by WhatsApp&apos;s own privacy terms. If
-              an online payment provider is connected in a live deployment, its
-              own privacy notice and security terms would apply, and this page
-              would need to name that provider.
+              OMNEXA does not process payments on this website. The cart and
+              enquiry form prepare a WhatsApp message for you to review and
+              send; no card, UPI, bank, wallet or other payment credentials are
+              collected or stored here. Any payment is arranged directly with
+              the seller in WhatsApp and is governed by WhatsApp&apos;s own terms.
+              This website does not receive, verify or record a payment.
             </p>
           ),
         },
@@ -193,8 +194,8 @@ export default async function PrivacyPolicyPage() {
               </p>
               <ul>
                 <li>
-                  the hosting, database and storage environment where the
-                  application and its SQLite database are deployed;
+                  the hosting, database and file-storage environment where the
+                  application, its database and uploaded files are hosted;
                 </li>
                 <li>
                   a transactional email provider, if configured, for
@@ -227,16 +228,20 @@ export default async function PrivacyPolicyPage() {
             <>
               <p>
                 Account and shopping data are kept while your account exists.
-                Orders are kept as store records for as long as needed to
-                operate the demonstration and answer questions. Contact,
-                wholesale, waitlist and newsletter messages are kept until they
-                are handled or the audience records are removed. Sessions expire
-                at sign-out or after their configured lifetime.
+                Your bag, wishlist, saved addresses, recently viewed products
+                and search history remain until you remove them or your account
+                is deleted. Contact, wholesale, waitlist and newsletter messages
+                are kept until they are handled or the audience records are
+                removed. Sessions expire at sign-out or after their configured
+                lifetime.
               </p>
               <p>
-                This is a demo environment: reseeding the database clears its
-                demo accounts, orders and messages. Do not treat it as permanent
-                storage.
+                Delivery details entered in the WhatsApp enquiry form are used
+                only to prepare the message you choose to send. They are not
+                stored as an order; if you are signed in and choose to save the
+                address, it is added to your account address book. This is a
+                demo environment: reseeding the database clears its demo
+                accounts and messages. Do not treat it as permanent storage.
               </p>
             </>
           ),
@@ -247,7 +252,7 @@ export default async function PrivacyPolicyPage() {
             <>
               <ul>
                 <li>
-                  Update your name, email and password from{" "}
+                  Update your name, phone number and password from{" "}
                   <Link href="/account/profile">your profile</Link>.
                 </li>
                 <li>
@@ -264,9 +269,10 @@ export default async function PrivacyPolicyPage() {
                   <a href={`mailto:${settings.contactEmail}`}>
                     {settings.contactEmail}
                   </a>
-                  . Deletion is handled manually in this demonstration; order
-                  records may need to be retained where the operator has a
-                  legitimate record-keeping obligation.
+                  . Deletion is handled manually in this demonstration; saved
+                  addresses, bag, wishlist and browsing history attached to the
+                  account are removed. Messages you sent separately through
+                  WhatsApp remain in that chat and are outside this website.
                 </li>
                 <li>
                   Ask to be removed from a waitlist or newsletter list by
@@ -286,10 +292,9 @@ export default async function PrivacyPolicyPage() {
           heading: "Security",
           body: (
             <p>
-              Passwords are hashed with bcrypt, session and order tokens are
-              random and are stored hashed where appropriate, cookies are
-              httpOnly and SameSite, and account and admin actions are checked
-              on the server. No method of storage or transmission is completely
+              Passwords are hashed with bcrypt, session tokens are random and
+              stored hashed, cookies are httpOnly and SameSite, and account and
+              admin actions are checked on the server. No method of storage or transmission is completely
               secure, so please use a unique password and avoid sending
               sensitive information through the demo. Report a suspected issue
               to the contact address above.
@@ -311,7 +316,7 @@ export default async function PrivacyPolicyPage() {
           heading: "Changes to this notice",
           body: (
             <p>
-              This page is dated 18 November 2026 and will be revised if the
+              This page is dated 21 November 2026 and will be revised if the
               store&apos;s data practices change or the demonstration becomes a
               live shop. Material changes will be reflected here; continued use
               after an update means the revised notice applies.

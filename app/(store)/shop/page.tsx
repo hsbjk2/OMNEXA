@@ -91,8 +91,8 @@ export default async function ShopPage({
               <Info className="mt-0.5 size-3.5 shrink-0 text-forest/45" />
               <p>
                 Demo catalogue: product details, imagery, pricing and stock are
-                for this storefront preview. Checkout sends your bag to
-                WhatsApp, where the seller confirms payment and delivery.
+                for this storefront preview. WhatsApp ordering sends your bag to
+                the seller, who confirms availability, delivery and payment.
               </p>
             </div>
 

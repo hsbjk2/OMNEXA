@@ -36,7 +36,7 @@ export function Footer({
   const whatsappHref =
     buildWhatsAppHref(
       settings.whatsapp,
-      "Hi OMNEXA! I would like to place an order and get further details.",
+      "Hi OMNEXA! I would like to enquire about your products and get further details.",
     ) ?? "";
 
   return (
@@ -175,7 +175,7 @@ export function Footer({
                 <p className="flex items-start gap-2.5">
                   <MapPin className="mt-0.5 size-4 shrink-0 text-lime/80" strokeWidth={1.5} />
                   <span>
-                    Store location is being finalised. Online orders are open.
+                    Store location is being finalised. WhatsApp ordering is open.
                   </span>
                 </p>
               )}
@@ -196,7 +196,7 @@ export function Footer({
                       {settings.whatsapp}
                     </a>
                     <p className="mt-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.13em] text-lime/70">
-                      WhatsApp · orders &amp; further details
+                      WhatsApp · enquiries &amp; further details
                     </p>
                   </div>
                 </div>
@@ -261,8 +261,9 @@ export function Footer({
               <div className="flex items-start gap-2 border-t border-white/10 pt-4 text-[0.68rem] leading-relaxed text-white/35">
                 <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-lime/60" />
                 <p>
-                  Order on WhatsApp · Flat {formatPrice(shipping.rate)} shipping,
-                  complimentary above {formatPrice(shipping.threshold)}.
+                  Order on WhatsApp · Flat {formatPrice(shipping.rate)} delivery,
+                  complimentary above {formatPrice(shipping.threshold)}. Final
+                  delivery and payment are confirmed in chat.
                 </p>
               </div>
             </div>

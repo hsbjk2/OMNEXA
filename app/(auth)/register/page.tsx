@@ -6,7 +6,7 @@ import { RegisterForm } from "@/components/auth/register-form";
 export const metadata: Metadata = {
   title: "Create an account",
   description:
-    "Create an OMNEXA account for a faster checkout, saved addresses and order history.",
+    "Create an OMNEXA account for saved addresses, a persistent bag, wishlist and browsing history.",
   robots: { index: false, follow: false },
 };
 

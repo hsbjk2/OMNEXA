@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -50,6 +51,11 @@ const syncSchema = z.object({
     )
     .max(50),
   wishlist: z.array(z.string().min(1)).max(100),
+});
+
+const guestActivitySchema = z.object({
+  searchHistory: z.array(z.string().trim().min(1).max(80)).max(20),
+  recentlyViewed: z.array(z.string().min(1)).max(20),
 });
 
 export async function fetchServerShopState(): Promise<ServerShopState | null> {
@@ -132,54 +138,172 @@ export async function syncShopState(input: {
 
   const products = await prisma.product.findMany({
     where: { id: { in: productIds }, isPublished: true },
-    select: { id: true },
+    select: { id: true, stock: true, status: true },
   });
-  const validIds = new Set(products.map((product) => product.id));
+  const productMap = new Map(products.map((product) => [product.id, product]));
 
+  // The browser can be stale or tampered with. Keep only published, available
+  // products and clamp every saved quantity to the live stock level.
   const cartMap = new Map<string, { productId: string; quantity: number; variant: string }>();
   for (const item of parsed.data.cart) {
-    if (!validIds.has(item.productId)) continue;
+    const product = productMap.get(item.productId);
+    if (!product || product.status !== "AVAILABLE" || product.stock < 1) {
+      continue;
+    }
     const variant = item.variant ?? "";
     const key = `${item.productId}::${variant}`;
     const current = cartMap.get(key);
     if (current) {
-      current.quantity = Math.min(20, current.quantity + item.quantity);
+      current.quantity = Math.min(
+        product.stock,
+        Math.min(20, current.quantity + item.quantity),
+      );
     } else {
       cartMap.set(key, {
         productId: item.productId,
-        quantity: Math.min(20, item.quantity),
+        quantity: Math.min(product.stock, Math.min(20, item.quantity)),
         variant,
       });
     }
   }
 
   const wishlistIds = Array.from(new Set(parsed.data.wishlist)).filter((id) =>
-    validIds.has(id),
+    productMap.has(id),
   );
 
-  await prisma.$transaction(async (tx) => {
-    await tx.cartItem.deleteMany({ where: { userId: user.id } });
-    if (cartMap.size > 0) {
-      await tx.cartItem.createMany({
+  // Cloudflare D1 does not support interactive transactions. A batch
+  // transaction keeps the same delete-then-insert ordering without relying on
+  // a callback-based transaction that throws on the D1 adapter.
+  const operations: Prisma.PrismaPromise<unknown>[] = [
+    prisma.cartItem.deleteMany({ where: { userId: user.id } }),
+    prisma.wishlistItem.deleteMany({ where: { userId: user.id } }),
+  ];
+
+  if (cartMap.size > 0) {
+    operations.push(
+      prisma.cartItem.createMany({
         data: Array.from(cartMap.values()).map((item) => ({
           userId: user.id,
           productId: item.productId,
           quantity: item.quantity,
           variant: item.variant,
         })),
-      });
-    }
+      }),
+    );
+  }
 
-    await tx.wishlistItem.deleteMany({ where: { userId: user.id } });
-    if (wishlistIds.length > 0) {
-      await tx.wishlistItem.createMany({
+  if (wishlistIds.length > 0) {
+    operations.push(
+      prisma.wishlistItem.createMany({
         data: wishlistIds.map((productId) => ({
           userId: user.id,
           productId,
         })),
+      }),
+    );
+  }
+
+  await prisma.$transaction(operations);
+
+  return { status: "success" };
+}
+
+export async function mergeGuestActivity(input: {
+  searchHistory: string[];
+  recentlyViewed: string[];
+}): Promise<ActionState> {
+  const user = await getCurrentUser();
+  if (!user) return { status: "idle" };
+
+  const parsed = guestActivitySchema.safeParse(input);
+  if (!parsed.success) {
+    return { status: "error", message: "Guest activity could not be merged." };
+  }
+
+  const queries = Array.from(
+    new Set(
+      parsed.data.searchHistory
+        .map((query) => query.trim())
+        .filter((query) => query.length >= 2),
+    ),
+  );
+  const productIds = Array.from(new Set(parsed.data.recentlyViewed));
+
+  const [existingQueries, products] = await Promise.all([
+    prisma.searchHistory.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: { query: true },
+    }),
+    productIds.length > 0
+      ? prisma.product.findMany({
+          where: { id: { in: productIds }, isPublished: true },
+          select: { id: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const existingKeys = new Set(
+    existingQueries.map((row) => row.query.toLowerCase()),
+  );
+  const newQueries = queries.filter(
+    (query) => !existingKeys.has(query.toLowerCase()),
+  );
+
+  if (newQueries.length > 0) {
+    const now = Date.now();
+    await prisma.searchHistory.createMany({
+      data: newQueries.map((query, index) => ({
+        userId: user.id,
+        query,
+        createdAt: new Date(now - index * 1000),
+      })),
+    });
+  }
+
+  const validProductIds = new Set(products.map((product) => product.id));
+  const recentIds = productIds.filter((id) => validProductIds.has(id));
+  if (recentIds.length > 0) {
+    const now = Date.now();
+    for (const [index, productId] of recentIds.entries()) {
+      await prisma.recentlyViewed.upsert({
+        where: { userId_productId: { userId: user.id, productId } },
+        update: {},
+        create: {
+          userId: user.id,
+          productId,
+          viewedAt: new Date(now - index * 1000),
+        },
       });
     }
-  });
+  }
+
+  const [oldSearches, oldViews] = await Promise.all([
+    prisma.searchHistory.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      skip: 30,
+      select: { id: true },
+    }),
+    prisma.recentlyViewed.findMany({
+      where: { userId: user.id },
+      orderBy: { viewedAt: "desc" },
+      skip: 20,
+      select: { id: true },
+    }),
+  ]);
+
+  if (oldSearches.length > 0) {
+    await prisma.searchHistory.deleteMany({
+      where: { id: { in: oldSearches.map((row) => row.id) } },
+    });
+  }
+  if (oldViews.length > 0) {
+    await prisma.recentlyViewed.deleteMany({
+      where: { id: { in: oldViews.map((row) => row.id) } },
+    });
+  }
 
   return { status: "success" };
 }

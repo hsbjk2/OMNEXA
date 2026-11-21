@@ -120,7 +120,7 @@ export function SettingsForm({
               type="tel"
               defaultValue={settings.whatsapp}
               error={state.errors?.whatsapp}
-              hint="Shown as a contact option when set."
+              hint="Used for every product and cart enquiry. Include the country code. Leave blank to hide WhatsApp ordering."
             />
           </div>
         </section>
@@ -208,8 +208,8 @@ export function SettingsForm({
           <div className="border-b border-line px-4 py-3.5">
             <h2 className="text-[0.85rem] font-semibold">Social and marketplace</h2>
             <p className="mt-0.5 text-[0.66rem] text-muted">
-              Links appear only when they are real, complete URLs. No placeholder
-              seller links are published.
+              Store-level links appear only when they are real, complete URLs.
+              Product-level Amazon and Flipkart links are added on each product.
             </p>
           </div>
           <div className="grid gap-4 p-4 sm:grid-cols-2">
@@ -288,16 +288,18 @@ export function SettingsForm({
               <dd className="font-medium">₹{shipping.threshold}</dd>
             </div>
             <div className="flex justify-between gap-3 border-b border-line pb-2.5">
-              <dt className="text-muted">Payment</dt>
-              <dd className="font-medium">Order on WhatsApp</dd>
+              <dt className="text-muted">Online payment</dt>
+              <dd className="font-medium">Not collected</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-muted">Order confirmation</dt>
-              <dd className="font-medium">Private token link</dd>
+              <dt className="text-muted">Ordering</dt>
+              <dd className="font-medium">WhatsApp enquiry</dd>
             </div>
           </dl>
           <p className="mt-3 text-[0.64rem] leading-relaxed text-muted/65">
-            Change shipping with <code>SHIPPING_FLAT_RATE</code> and{" "}
+            OMNEXA does not collect payment details or create online orders.
+            Customers prepare an enquiry and continue with the seller on
+            WhatsApp. Change shipping with <code>SHIPPING_FLAT_RATE</code> and{" "}
             <code>FREE_SHIPPING_THRESHOLD</code>, then restart the server.
           </p>
         </section>
@@ -340,6 +342,7 @@ export function SettingsForm({
             <li>· Blank location fields show a transparent “being finalised” note.</li>
             <li>· No reviews, ratings or invented order counts are displayed.</li>
             <li>· Marketplace links only publish when saved as complete URLs.</li>
+            <li>· No payment is collected on the website; every purchase is a WhatsApp enquiry.</li>
           </ul>
           <a
             href="/"

@@ -45,6 +45,8 @@ export type AdminProductValues = {
   isDemo: boolean;
   variantLabel: string;
   variantOptions: string[];
+  amazonUrl: string;
+  flipkartUrl: string;
 };
 
 type CategoryOption = { id: string; name: string };
@@ -519,6 +521,49 @@ export function ProductForm({
               Separate options with commas. Leave both blank for a single-option
               product. Stock is shared across variants.
             </p>
+          </section>
+
+          <section className="border border-line bg-white p-5">
+            <p className="mb-1 text-[0.62rem] font-bold uppercase tracking-[0.13em] text-forest/45">
+              Marketplace links
+            </p>
+            <p className="mb-4 text-[0.66rem] leading-relaxed text-muted">
+              Optional. Add this product&apos;s own Amazon or Flipkart listing.
+              Buttons appear on the product page only when a complete URL is
+              saved.
+            </p>
+            <div className="grid gap-4">
+              <div>
+                <label htmlFor="amazonUrl" className="field-label">
+                  Amazon product URL
+                </label>
+                <input
+                  id="amazonUrl"
+                  name="amazonUrl"
+                  type="url"
+                  defaultValue={product?.amazonUrl ?? ""}
+                  className="field"
+                  placeholder="https://www.amazon.in/dp/…"
+                  aria-invalid={Boolean(state.errors?.amazonUrl)}
+                />
+                <FieldError message={state.errors?.amazonUrl} />
+              </div>
+              <div>
+                <label htmlFor="flipkartUrl" className="field-label">
+                  Flipkart product URL
+                </label>
+                <input
+                  id="flipkartUrl"
+                  name="flipkartUrl"
+                  type="url"
+                  defaultValue={product?.flipkartUrl ?? ""}
+                  className="field"
+                  placeholder="https://www.flipkart.com/…"
+                  aria-invalid={Boolean(state.errors?.flipkartUrl)}
+                />
+                <FieldError message={state.errors?.flipkartUrl} />
+              </div>
+            </div>
           </section>
         </div>
 

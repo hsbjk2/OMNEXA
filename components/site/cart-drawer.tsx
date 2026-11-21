@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useStore } from "@/components/providers/store-provider";
+import { WhatsAppIcon } from "@/components/site/social-icons";
 import { formatPrice } from "@/lib/utils";
 
 export function CartDrawer() {
@@ -240,7 +241,8 @@ export function CartDrawer() {
                     </p>
                   </div>
                   <p className="mt-1 text-[0.68rem] leading-relaxed text-muted">
-                    Delivery is calculated at checkout. Orders are completed on
+                    Delivery is estimated from your bag. The seller confirms
+                    availability, the final delivery charge and payment on
                     WhatsApp.
                   </p>
                   <div className="mt-4 grid grid-cols-2 gap-2">
@@ -252,11 +254,11 @@ export function CartDrawer() {
                       View bag
                     </Link>
                     <Link
-                      href="/checkout"
+                      href="/order-request"
                       onClick={closeCart}
                       className="btn btn-forest"
                     >
-                      Checkout
+                      <WhatsAppIcon className="size-3.5" /> Enquire
                     </Link>
                   </div>
                   <button

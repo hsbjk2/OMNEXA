@@ -3,23 +3,27 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
+  ExternalLink,
   Heart,
   MapPin,
-  Package,
   Search,
+  ShoppingBag,
   ShieldAlert,
   Sparkles,
-  Truck,
+  UserRound,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { getSiteSettings } from "@/lib/settings";
 import {
-  ORDER_STATUS_LABELS,
-  type OrderStatus,
-} from "@/lib/constants";
-import { formatDate, formatPrice } from "@/lib/utils";
-import { orderStatusTone } from "@/lib/orders";
+  productCardInclude,
+  toProductCard,
+  type ProductCardData,
+} from "@/lib/products";
+import { buildWhatsAppHref, isWhatsAppConfigured } from "@/lib/whatsapp";
+import { formatPrice, isValidHttpUrl, parseStringArray } from "@/lib/utils";
 import { ClearSearchHistory } from "@/components/account/clear-search-history";
+import { WhatsAppIcon } from "@/components/site/social-icons";
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -28,6 +32,44 @@ export const metadata: Metadata = {
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+function productImage(images: string) {
+  return parseStringArray(images)[0] || "/images/fallback-product.webp";
+}
+
+function CompactProduct({
+  product,
+  note,
+}: {
+  product: ProductCardData;
+  note?: string;
+}) {
+  return (
+    <Link
+      href={`/product/${product.slug}`}
+      className="group flex items-center gap-3 border border-line bg-white p-2.5 transition hover:border-forest/30"
+    >
+      <span className="relative size-14 shrink-0 overflow-hidden bg-light">
+        <Image
+          src={product.image}
+          alt={product.name}
+          fill
+          sizes="56px"
+          className="object-cover transition duration-500 group-hover:scale-105"
+        />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[0.78rem] font-medium text-ink">
+          {product.name}
+        </span>
+        <span className="mt-0.5 block text-[0.68rem] text-muted">
+          {note || formatPrice(product.price)}
+        </span>
+      </span>
+      <ArrowRight className="size-3.5 shrink-0 text-forest/25 transition group-hover:text-forest" />
+    </Link>
+  );
+}
 
 export default async function AccountOverviewPage({
   searchParams,
@@ -40,32 +82,55 @@ export default async function AccountOverviewPage({
   ]);
   const restricted = params.restricted === "1";
 
-  const [orders, addresses, wishlistCount, cartCount, searchRows] =
+  const [cartRows, wishlistRows, addresses, searchRows, recentRows, settings] =
     await Promise.all([
-      prisma.order.findMany({
+      prisma.cartItem.findMany({
         where: { userId: user.id },
-        include: { items: { select: { id: true, image: true, productName: true } } },
-        orderBy: { createdAt: "desc" },
-        take: 3,
+        include: { product: { include: productCardInclude } },
+        orderBy: { createdAt: "asc" },
       }),
-      prisma.address.count({ where: { userId: user.id } }),
-      prisma.wishlistItem.count({ where: { userId: user.id } }),
-      prisma.cartItem.count({ where: { userId: user.id } }),
+      prisma.wishlistItem.findMany({
+        where: { userId: user.id },
+        include: { product: { include: productCardInclude } },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.address.findMany({
+        where: { userId: user.id },
+        orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+      }),
       prisma.searchHistory.findMany({
         where: { userId: user.id },
         orderBy: { createdAt: "desc" },
         take: 24,
         select: { query: true },
       }),
+      prisma.recentlyViewed.findMany({
+        where: { userId: user.id },
+        include: { product: { include: productCardInclude } },
+        orderBy: { viewedAt: "desc" },
+        take: 4,
+      }),
+      getSiteSettings(),
     ]);
 
-  const orderCount = await prisma.order.count({ where: { userId: user.id } });
-  const openOrders = await prisma.order.count({
-    where: {
-      userId: user.id,
-      status: { in: ["PENDING", "CONFIRMED", "PACKED", "SHIPPED"] },
-    },
-  });
+  const cart = cartRows
+    .filter((row) => row.product.isPublished)
+    .map((row) => ({
+      ...row,
+      product: toProductCard(row.product),
+      image: productImage(row.product.images),
+    }));
+  const cartCount = cart.reduce((sum, row) => sum + row.quantity, 0);
+  const cartSubtotal = cart.reduce(
+    (sum, row) => sum + row.product.price * row.quantity,
+    0,
+  );
+  const wishlist = wishlistRows
+    .filter((row) => row.product.isPublished)
+    .map((row) => toProductCard(row.product));
+  const recent = recentRows
+    .filter((row) => row.product.isPublished)
+    .map((row) => toProductCard(row.product));
 
   const seen = new Set<string>();
   const searchHistory = searchRows
@@ -78,30 +143,41 @@ export default async function AccountOverviewPage({
     .slice(0, 6)
     .map((row) => row.query);
 
+  const whatsappHref = buildWhatsAppHref(
+    settings.whatsapp,
+    "Hi OMNEXA! I have a question about your products and would love some help.",
+  );
+  const amazonUrl = isValidHttpUrl(settings.amazonUrl)
+    ? settings.amazonUrl
+    : null;
+  const flipkartUrl = isValidHttpUrl(settings.flipkartUrl)
+    ? settings.flipkartUrl
+    : null;
+
   const stats = [
     {
-      label: "Total orders",
-      value: orderCount,
-      href: "/account/orders",
-      icon: Package,
+      label: "Bag pieces",
+      value: cartCount,
+      href: "/cart",
+      icon: ShoppingBag,
     },
     {
-      label: "In progress",
-      value: openOrders,
-      href: "/account/orders",
-      icon: Truck,
+      label: "Wishlist",
+      value: wishlist.length,
+      href: "/wishlist",
+      icon: Heart,
     },
     {
       label: "Saved addresses",
-      value: addresses,
+      value: addresses.length,
       href: "/account/addresses",
       icon: MapPin,
     },
     {
-      label: "Wishlist",
-      value: wishlistCount,
-      href: "/wishlist",
-      icon: Heart,
+      label: "Recent searches",
+      value: searchHistory.length,
+      href: "#recent-searches",
+      icon: Search,
     },
   ];
 
@@ -118,13 +194,14 @@ export default async function AccountOverviewPage({
               Admin tools are restricted
             </p>
             <p className="mt-0.5 text-[#6b5f33]">
-              This area is only available to store administrators. Your
-              customer account is unchanged — manage your orders and details
-              below, or continue shopping.
+              This area is only available to store administrators. Your customer
+              account is unchanged — browse your saved pieces and details below,
+              or continue shopping.
             </p>
           </div>
         </div>
       )}
+
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {stats.map((stat) => (
           <Link
@@ -153,150 +230,310 @@ export default async function AccountOverviewPage({
         <div className="border border-line bg-white">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <div>
-              <p className="eyebrow text-forest/45">Recent orders</p>
+              <p className="eyebrow text-forest/45">My cart</p>
               <h2 className="mt-1 font-display text-[1.5rem] leading-tight">
-                Your latest pieces
+                Ready when you are
               </h2>
             </div>
             <Link
-              href="/account/orders"
+              href="/cart"
               className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-forest/50 transition hover:text-forest"
             >
-              View all
+              View bag
             </Link>
           </div>
 
-          {orders.length === 0 ? (
-            <div className="px-5 py-12 text-center">
-              <Sparkles className="mx-auto size-6 text-forest/25" strokeWidth={1.3} />
-              <p className="mt-4 font-display text-[1.5rem]">
-                Your first order is yet to be placed.
+          {cart.length === 0 ? (
+            <div className="px-5 py-10 text-center">
+              <Sparkles
+                className="mx-auto size-6 text-forest/25"
+                strokeWidth={1.3}
+              />
+              <p className="mt-3 font-display text-[1.4rem]">
+                Your bag is waiting for its first piece.
               </p>
-              <p className="mx-auto mt-2 max-w-sm text-[0.82rem] leading-relaxed text-muted">
-                Explore considered skincare, colour and jewellery for the
-                everyday.
+              <p className="mx-auto mt-2 max-w-sm text-[0.8rem] leading-relaxed text-muted">
+                Save what you love, send the enquiry on WhatsApp, and the seller
+                will confirm availability, delivery and payment in chat.
               </p>
               <Link href="/shop" className="btn btn-forest mt-5">
                 Shop the collection <ArrowRight className="size-3.5" />
               </Link>
             </div>
           ) : (
-            <ul className="divide-y divide-line">
-              {orders.map((order) => (
-                <li key={order.id}>
-                  <Link
-                    href={`/account/orders/${order.orderNumber}`}
-                    className="group flex items-center gap-4 px-5 py-4 transition hover:bg-soft"
-                  >
-                    <div className="flex -space-x-2">
-                      {order.items.slice(0, 3).map((item) => (
-                        <span
-                          key={item.id}
-                          className="relative size-11 overflow-hidden rounded-full border-2 border-white bg-light"
-                        >
-                          <Image
-                            src={item.image || "/images/fallback-product.webp"}
-                            alt=""
-                            fill
-                            sizes="44px"
-                            className="object-cover"
-                          />
-                        </span>
-                      ))}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[0.82rem] font-semibold text-ink">
-                        {order.orderNumber}
-                      </p>
-                      <p className="mt-0.5 text-[0.68rem] text-muted">
-                        {formatDate(order.createdAt)} ·{" "}
-                        {order.items.length === 1
-                          ? "1 piece"
-                          : `${order.items.length} pieces`}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-display text-[1.15rem]">
-                        {formatPrice(order.total)}
-                      </p>
-                      <span
-                        className={`tag mt-1 ${orderStatusTone(order.status)}`}
-                      >
-                        {ORDER_STATUS_LABELS[order.status as OrderStatus] ??
-                          order.status}
+            <>
+              <ul className="divide-y divide-line">
+                {cart.slice(0, 3).map((line) => (
+                  <li key={`${line.productId}-${line.variant}`}>
+                    <Link
+                      href={`/product/${line.product.slug}`}
+                      className="group flex items-center gap-3 px-5 py-3.5 transition hover:bg-soft/60"
+                    >
+                      <span className="relative size-14 shrink-0 overflow-hidden bg-light">
+                        <Image
+                          src={line.image}
+                          alt={line.product.name}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
                       </span>
-                    </div>
-                    <ArrowRight className="hidden size-4 text-forest/25 transition group-hover:translate-x-0.5 group-hover:text-forest sm:block" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[0.82rem] font-medium text-ink">
+                          {line.product.name}
+                        </span>
+                        <span className="mt-0.5 block text-[0.66rem] text-muted">
+                          {line.quantity}{" "}
+                          {line.quantity === 1 ? "piece" : "pieces"}
+                          {line.variant ? ` · ${line.variant}` : ""}
+                        </span>
+                      </span>
+                      <span className="text-[0.8rem] font-semibold text-forest">
+                        {formatPrice(line.product.price * line.quantity)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col gap-3 border-t border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-[0.72rem] text-muted">
+                  Estimated subtotal{" "}
+                  <span className="font-semibold text-ink">
+                    {formatPrice(cartSubtotal)}
+                  </span>
+                </p>
+                <Link href="/order-request" className="btn btn-forest">
+                  <WhatsAppIcon className="size-3.5" /> Order via WhatsApp
+                </Link>
+              </div>
+            </>
           )}
         </div>
 
         <div className="space-y-5">
           <div className="border border-line bg-white p-5">
-            <p className="eyebrow text-forest/45">In your cabinet</p>
-            <div className="mt-4 space-y-3">
-              <Link
-                href="/cart"
-                className="flex items-center justify-between border-b border-line pb-3 text-[0.8rem] text-ink transition hover:text-forest"
-              >
-                <span>Items in your bag</span>
-                <span className="font-semibold">{cartCount}</span>
-              </Link>
-              <Link
-                href="/wishlist"
-                className="flex items-center justify-between border-b border-line pb-3 text-[0.8rem] text-ink transition hover:text-forest"
-              >
-                <span>Saved to wishlist</span>
-                <span className="font-semibold">{wishlistCount}</span>
-              </Link>
+            <div className="flex items-center justify-between gap-3">
+              <p className="eyebrow text-forest/45">Personal information</p>
               <Link
                 href="/account/profile"
-                className="flex items-center justify-between text-[0.8rem] text-ink transition hover:text-forest"
+                className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-forest/50 transition hover:text-forest"
               >
-                <span>Account details</span>
-                <ArrowRight className="size-3.5 text-forest/35" />
+                Edit
               </Link>
+            </div>
+            <div className="mt-3 flex items-start gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-light text-forest">
+                <UserRound className="size-4" strokeWidth={1.5} />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-[0.82rem] font-medium text-ink">
+                  {user.name}
+                </p>
+                <p className="truncate text-[0.7rem] text-muted">
+                  {user.email}
+                </p>
+                {user.phone && (
+                  <p className="mt-0.5 text-[0.7rem] text-muted">
+                    {user.phone}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="border border-line bg-white p-5">
             <div className="flex items-center justify-between gap-3">
-              <p className="eyebrow text-forest/45">Recent searches</p>
-              {searchHistory.length > 0 && <ClearSearchHistory />}
+              <p className="eyebrow text-forest/45">Saved addresses</p>
+              <Link
+                href="/account/addresses"
+                className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-forest/50 transition hover:text-forest"
+              >
+                Manage
+              </Link>
             </div>
-            {searchHistory.length === 0 ? (
+            {addresses.length === 0 ? (
               <p className="mt-3 text-[0.78rem] leading-relaxed text-muted">
-                Searches you make while signed in appear here for quick
-                reference.
+                Save a delivery address to make your next WhatsApp enquiry
+                quicker.
               </p>
             ) : (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {searchHistory.map((query) => (
-                  <Link
-                    key={query}
-                    href={`/search?q=${encodeURIComponent(query)}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[0.7rem] text-forest/70 transition hover:border-forest hover:text-forest"
+              <ul className="mt-3 space-y-3">
+                {addresses.slice(0, 2).map((address) => (
+                  <li
+                    key={address.id}
+                    className="border-b border-line pb-3 text-[0.72rem] leading-relaxed text-muted last:border-0 last:pb-0"
                   >
-                    <Search className="size-3" /> {query}
-                  </Link>
+                    <span className="block text-[0.58rem] font-bold uppercase tracking-[0.12em] text-forest/55">
+                      {address.label}
+                      {address.isDefault ? " · Default" : ""}
+                    </span>
+                    <span className="mt-1 block text-ink">
+                      {address.fullName}
+                    </span>
+                    <span className="block">
+                      {address.line1}
+                      {address.line2 ? `, ${address.line2}` : ""}, {address.city},{" "}
+                      {address.state} {address.pincode}
+                    </span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </div>
+        </div>
+      </div>
 
-          <div className="border border-line bg-light/60 p-5">
-            <p className="eyebrow text-forest/45">Need a hand?</p>
-            <p className="mt-2 text-[0.8rem] leading-relaxed text-muted">
-              Questions about an order, a formula or a wholesale enquiry — our
-              team is one message away.
-            </p>
-            <Link href="/contact" className="btn-quiet mt-3">
-              Contact us <ArrowRight className="size-3.5" />
+      <div className="grid gap-5 xl:grid-cols-2">
+        <div className="border border-line bg-white">
+          <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <div>
+              <p className="eyebrow text-forest/45">My wishlist</p>
+              <h2 className="mt-1 font-display text-[1.4rem] leading-tight">
+                Saved for later
+              </h2>
+            </div>
+            <Link
+              href="/wishlist"
+              className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-forest/50 transition hover:text-forest"
+            >
+              View all
             </Link>
           </div>
+          {wishlist.length === 0 ? (
+            <p className="px-5 py-8 text-[0.8rem] leading-relaxed text-muted">
+              Tap the heart on any product to keep it here.
+            </p>
+          ) : (
+            <div className="grid gap-2 p-4 sm:grid-cols-2">
+              {wishlist.slice(0, 4).map((product) => (
+                <CompactProduct key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="border border-line bg-white">
+          <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <div>
+              <p className="eyebrow text-forest/45">Recently viewed</p>
+              <h2 className="mt-1 font-display text-[1.4rem] leading-tight">
+                Pick up where you left off
+              </h2>
+            </div>
+          </div>
+          {recent.length === 0 ? (
+            <p className="px-5 py-8 text-[0.8rem] leading-relaxed text-muted">
+              Products you open while signed in will appear here.
+            </p>
+          ) : (
+            <div className="grid gap-2 p-4 sm:grid-cols-2">
+              {recent.map((product) => (
+                <CompactProduct key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.4fr_0.6fr]">
+        <div id="recent-searches" className="border border-line bg-white p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow text-forest/45">Search history</p>
+              <h2 className="mt-1 font-display text-[1.4rem] leading-tight">
+                What you were looking for
+              </h2>
+            </div>
+            {searchHistory.length > 0 && <ClearSearchHistory />}
+          </div>
+          {searchHistory.length === 0 ? (
+            <p className="mt-3 text-[0.8rem] leading-relaxed text-muted">
+              Searches you make while signed in appear here for quick reference.
+            </p>
+          ) : (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {searchHistory.map((query) => (
+                <Link
+                  key={query}
+                  href={`/search?q=${encodeURIComponent(query)}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[0.7rem] text-forest/70 transition hover:border-forest hover:text-forest"
+                >
+                  <Search className="size-3" /> {query}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="border border-line bg-white p-5">
+          <p className="eyebrow text-forest/45">Marketplace & WhatsApp</p>
+          <p className="mt-2 text-[0.78rem] leading-relaxed text-muted">
+            Shop OMNEXA&apos;s official marketplace stores, or message the team
+            directly for availability, delivery and payment arrangements.
+          </p>
+          <div className="mt-4 grid gap-2">
+            {amazonUrl && (
+              <a
+                href={amazonUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline justify-between"
+              >
+                Amazon storefront <ExternalLink className="size-3.5" />
+              </a>
+            )}
+            {flipkartUrl && (
+              <a
+                href={flipkartUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline justify-between"
+              >
+                Flipkart storefront <ExternalLink className="size-3.5" />
+              </a>
+            )}
+            {whatsappHref && (
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-forest justify-between"
+              >
+                <span className="flex items-center gap-2">
+                  <WhatsAppIcon className="size-4" /> WhatsApp OMNEXA
+                </span>
+                <ArrowRight className="size-3.5" />
+              </a>
+            )}
+          </div>
+          {!amazonUrl && !flipkartUrl && (
+            <p className="mt-3 text-[0.66rem] leading-relaxed text-muted/65">
+              Amazon and Flipkart storefront links will appear here once the
+              seller adds them in settings.
+            </p>
+          )}
+          {!isWhatsAppConfigured(settings.whatsapp) && (
+            <p className="mt-3 text-[0.66rem] leading-relaxed text-muted/65">
+              WhatsApp contact becomes available once the business number is
+              configured.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="border border-line bg-light/60 p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="eyebrow text-forest/45">Need a hand?</p>
+            <p className="mt-2 max-w-xl text-[0.8rem] leading-relaxed text-muted">
+              Questions about a product, a formula or a wholesale enquiry — our
+              team is one message away. Final purchase details are always
+              confirmed directly on WhatsApp.
+            </p>
+          </div>
+          <Link href="/contact" className="btn btn-outline shrink-0">
+            Contact us <ArrowRight className="size-3.5" />
+          </Link>
         </div>
       </div>
     </div>

@@ -6,15 +6,16 @@ import {
   Heart,
   Home,
   MapPin,
-  Package,
   ShieldCheck,
+  ShoppingBag,
   UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/account", label: "Overview", icon: Home },
-  { href: "/account/orders", label: "Orders", icon: Package },
+  { href: "/cart", label: "My cart", icon: ShoppingBag },
+  { href: "/wishlist", label: "My wishlist", icon: Heart },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
   { href: "/account/profile", label: "Profile & security", icon: UserRound },
 ];
@@ -48,14 +49,6 @@ export function AccountNav({ isAdmin }: { isAdmin?: boolean }) {
             </li>
           );
         })}
-        <li className="lg:hidden">
-          <Link
-            href="/wishlist"
-            className="flex items-center gap-2.5 whitespace-nowrap px-3.5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-forest/65 transition hover:bg-light hover:text-forest"
-          >
-            <Heart className="size-4" strokeWidth={1.5} /> Wishlist
-          </Link>
-        </li>
         {isAdmin && (
           <li className="lg:mt-2 lg:w-full lg:border-t lg:border-line lg:pt-2">
             <Link

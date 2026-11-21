@@ -26,6 +26,8 @@ export type ProductCardData = {
   isNewArrival: boolean;
   variantLabel: string | null;
   variantOptions: string[];
+  amazonUrl: string | null;
+  flipkartUrl: string | null;
   category: { name: string; slug: string };
   createdAt: string;
 };
@@ -55,6 +57,8 @@ export function toProductCard(product: ProductWithCategory): ProductCardData {
     isNewArrival: product.isNewArrival,
     variantLabel: product.variantLabel,
     variantOptions: parseStringArray(product.variantOptions),
+    amazonUrl: product.amazonUrl,
+    flipkartUrl: product.flipkartUrl,
     category: product.category,
     createdAt: product.createdAt.toISOString(),
   };

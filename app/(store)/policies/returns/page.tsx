@@ -6,11 +6,11 @@ import { getSiteSettings } from "@/lib/settings";
 export const metadata: Metadata = {
   title: "Return policy",
   description:
-    "Cancellations, damaged items and the current return status of the OMNEXA demonstration storefront.",
+    "Cancellations, damaged items and the current return position for OMNEXA WhatsApp purchase enquiries.",
   openGraph: {
     title: "Return policy — OMNEXA",
     description:
-      "What can and cannot happen with returns while OMNEXA remains a demonstration store.",
+      "What can and cannot happen with returns while OMNEXA remains a catalogue and WhatsApp enquiry store.",
   },
 };
 
@@ -39,11 +39,12 @@ export default async function ReturnsPolicyPage() {
           body: (
             <>
               <p>
-                OMNEXA is a demonstration store. Orders placed through it are
-                recorded in the database and can be managed in the admin panel,
-                but they are not dispatched, no payment is collected and no
-                physical goods change hands. There is therefore nothing to
-                return for a demo order.
+                OMNEXA is a catalogue and WhatsApp shopping-assistance
+                storefront. Adding a product to your bag or preparing a WhatsApp
+                message does not create an order, reserve stock, collect payment
+                or dispatch goods. The catalogue is demo data. Any purchase is
+                arranged directly with the seller in WhatsApp, so there is no
+                online order to return.
               </p>
               <p>
                 A live return policy requires the operator to decide a return
@@ -59,17 +60,17 @@ export default async function ReturnsPolicyPage() {
           body: (
             <>
               <p>
-                Before dispatch, contact the store with the order number and the
-                email or phone used at checkout. In this demo an admin can move a
-                pending or confirmed order to cancelled, which also restores the
-                reserved stock to the catalogue.
+                Because the website does not create an order, there is no online
+                order number or order status. If you have already agreed a
+                purchase with the seller on WhatsApp, message the same chat
+                before dispatch to ask about cancellation. Stock shown on the
+                website is not reserved for you.
               </p>
               <p>
                 Once a live order has been handed to a courier, cancellation may
                 no longer be possible; the eventual policy should say exactly
                 where that cut-off falls. Do not assume a cancellation has been
-                accepted until the store confirms it. The order status on your
-                account or private confirmation link is the source of truth.
+                accepted until the seller confirms it in the WhatsApp chat.
               </p>
             </>
           ),
@@ -82,10 +83,10 @@ export default async function ReturnsPolicyPage() {
                 When the store begins shipping, this section will explain how to
                 report a damaged, incorrect or missing item, the evidence
                 required and the resolution offered. The sensible baseline is to
-                contact the store with the order number and clear photographs of
-                the parcel and product, and to keep the packaging until the
-                issue is resolved — but that is guidance, not a live claims
-                promise.
+                contact the seller in the same WhatsApp chat with the product,
+                delivery date and clear photographs of the parcel and product,
+                and to keep the packaging until the issue is resolved — but that
+                is guidance, not a live claims promise.
               </p>
               <p>
                 For the demonstration, reporting a data or ordering problem to{" "}
@@ -124,7 +125,7 @@ export default async function ReturnsPolicyPage() {
               <p>
                 No online payment gateway is connected, so there is no automatic
                 gateway refund flow. Payments are arranged directly with the
-                seller on WhatsApp; if an order is cancelled after payment, the
+                seller on WhatsApp; if a purchase is cancelled after payment, the
                 refund is arranged with the seller in the same chat. The exact
                 process, timing and any fees are not configured on this website
                 and should be confirmed with the seller before paying.
@@ -142,16 +143,16 @@ export default async function ReturnsPolicyPage() {
           body: (
             <>
               <p>
-                Every order has a status and a payment status. Admins can update
-                both, cancel an order and restore stock, and customers can review
-                their order history. This is operational plumbing for a future
-                policy, not a substitute for one.
+                The storefront supports browsing, a persistent bag and wishlist,
+                saved addresses, recently viewed products, search history and a
+                prefilled WhatsApp enquiry. It does not maintain order status,
+                payment status, order history or online order management.
               </p>
               <p>
                 You can read the <Link href="/policies/shipping">shipping policy</Link>{" "}
                 for the current delivery position and the{" "}
-                <Link href="/policies/terms">terms</Link> for the demo-order
-                caveats.
+                <Link href="/policies/terms">terms</Link> for the WhatsApp
+                enquiry caveats.
               </p>
             </>
           ),
@@ -160,14 +161,14 @@ export default async function ReturnsPolicyPage() {
           heading: "Contact",
           body: (
             <p>
-              Questions about a demo order, a cancellation or the eventual return
-              process can be sent to{" "}
+              Questions about a purchase enquiry, a cancellation or the eventual
+              return process can be sent to{" "}
               <a href={`mailto:${settings.contactEmail}`}>
                 {settings.contactEmail}
               </a>{" "}
-              or through the <Link href="/contact">contact page</Link>. Include
-              the order number if you have one. This policy is dated 18 November
-              2026.
+              or through the <Link href="/contact">contact page</Link>. If you
+              have already spoken to the seller on WhatsApp, continue in that
+              chat. This policy is dated 21 November 2026.
             </p>
           ),
         },

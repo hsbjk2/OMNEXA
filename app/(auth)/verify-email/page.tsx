@@ -36,7 +36,7 @@ export default async function VerifyEmailPage({
         </h1>
         <p className="mt-4 text-[0.88rem] leading-relaxed text-muted">
           Your email address is now verified. Sign in to manage your account,
-          orders, wishlist and addresses.
+          saved bag, wishlist and addresses.
         </p>
         <Link href="/login" className="btn btn-forest mt-7 w-full">
           Continue to sign in

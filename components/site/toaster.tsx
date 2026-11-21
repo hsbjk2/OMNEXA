@@ -5,13 +5,15 @@ import { AlertCircle, Check, Info, X } from "lucide-react";
 import { useStore } from "@/components/providers/store-provider";
 
 export function Toaster() {
-  const { toasts, dismissToast } = useStore();
+  const { toasts, dismissToast, cartOpen } = useStore();
 
   return (
     <div
       aria-live="polite"
       aria-atomic="true"
-      className="pointer-events-none fixed inset-x-4 bottom-5 z-[160] flex flex-col items-center gap-2 sm:left-auto sm:right-6 sm:items-end"
+      className={`pointer-events-none fixed inset-x-4 z-[160] flex flex-col items-center gap-2 transition-[bottom] duration-300 sm:left-auto sm:right-6 sm:items-end ${
+        cartOpen ? "bottom-[220px]" : "bottom-5"
+      }`}
     >
       <AnimatePresence initial={false}>
         {toasts.map((item) => (

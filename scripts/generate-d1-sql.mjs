@@ -5,7 +5,11 @@
  *
  * The generated module is executed once per D1 database by lib/d1.ts when the
  * storefront first boots on Cloudflare. Only public catalogue data and store
- * settings are copied; user, session and order tables are created empty.
+ * settings are copied; user, session and enquiry tables are created empty.
+ *
+ * Prisma's local SQLite connector stores DateTime columns as integer
+ * milliseconds, while the Prisma D1 adapter reads and writes ISO-8601 text.
+ * Every DateTime value is therefore normalised before it is emitted as SQL.
  */
 import { execFileSync } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
@@ -49,6 +53,80 @@ const schemaStatements = schemaSql
 
 const db = new DatabaseSync(dbPath);
 
+const columnTypes = new Map();
+
+function getColumnTypes(table) {
+  if (!columnTypes.has(table)) {
+    const columns = db.prepare(`PRAGMA table_info("${table}")`).all();
+    columnTypes.set(
+      table,
+      new Map(
+        columns.map((column) => [
+          column.name,
+          String(column.type || "").toUpperCase(),
+        ]),
+      ),
+    );
+  }
+  return columnTypes.get(table);
+}
+
+function isDateTimeColumn(table, column) {
+  return /^(DATETIME|DATE|TIMESTAMP)$/.test(
+    getColumnTypes(table).get(column) || "",
+  );
+}
+
+function toIso(date) {
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid DateTime value: ${String(date)}`);
+  }
+  // This is exactly the representation the Prisma D1 adapter writes and
+  // expects. Prisma's local SQLite connector uses integer milliseconds, so
+  // copying raw values into D1 is what caused the original crash.
+  return date.toISOString().replace("Z", "+00:00");
+}
+
+function epochToIso(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    throw new Error(`Invalid DateTime number: ${String(value)}`);
+  }
+  const milliseconds =
+    Math.abs(numeric) >= 100_000_000_000 ? numeric : numeric * 1000;
+  return toIso(new Date(milliseconds));
+}
+
+function toDateTime(value) {
+  if (value === null || value === undefined) return null;
+
+  if (typeof value === "number" || typeof value === "bigint") {
+    return epochToIso(value);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+
+    if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) {
+      return epochToIso(Number(trimmed));
+    }
+
+    // SQLite's CURRENT_TIMESTAMP is UTC but uses a space instead of "T".
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(trimmed)) {
+      return toIso(new Date(`${trimmed.replace(" ", "T")}Z`));
+    }
+
+    // ISO strings without an explicit offset are UTC in this database.
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(trimmed)) {
+      return toIso(new Date(`${trimmed}Z`));
+    }
+
+    return toIso(new Date(trimmed));
+  }
+
+  throw new Error(`Unsupported DateTime value: ${String(value)}`);
+}
+
 function quote(value) {
   if (value === null || value === undefined) return "NULL";
   if (typeof value === "number" || typeof value === "bigint") return String(value);
@@ -61,7 +139,12 @@ function quote(value) {
 function insertStatements(table, rows) {
   return rows.map((row) => {
     const columns = Object.keys(row);
-    const values = columns.map((column) => quote(row[column]));
+    const values = columns.map((column) => {
+      const value = row[column];
+      return quote(
+        isDateTimeColumn(table, column) ? toDateTime(value) : value,
+      );
+    });
     return `INSERT OR IGNORE INTO "${table}" (${columns
       .map((column) => `"${column}"`)
       .join(", ")}) VALUES (${values.join(", ")})`;

@@ -356,8 +356,8 @@ export function AddressManager({
           </h2>
           <p className="mt-2 text-[0.82rem] leading-relaxed text-muted">
             {addresses.length === 0
-              ? "Add an address to make checkout quicker."
-              : `${addresses.length} of ${maxAddresses} addresses saved. Your default is used first at checkout.`}
+              ? "Add an address to make your next WhatsApp enquiry quicker."
+              : `${addresses.length} of ${maxAddresses} addresses saved. Your default is used first when you prepare a WhatsApp enquiry.`}
           </p>
         </div>
         <button

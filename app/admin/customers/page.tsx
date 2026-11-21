@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BadgeCheck, Search, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { formatDate, formatPrice, initials } from "@/lib/utils";
+import { formatDate, initials } from "@/lib/utils";
 import { Pagination } from "@/components/shop/pagination";
 import { AdminEmpty, AdminPageHeader } from "@/components/admin/ui";
 
@@ -55,10 +55,13 @@ export default async function AdminCustomersPage({
         phone: true,
         emailVerified: true,
         createdAt: true,
-        _count: { select: { orders: true, addresses: true } },
-        orders: {
-          where: { status: { not: "CANCELLED" } },
-          select: { total: true },
+        _count: {
+          select: {
+            addresses: true,
+            cartItems: true,
+            wishlist: true,
+            searchHistory: true,
+          },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -82,7 +85,7 @@ export default async function AdminCustomersPage({
       <AdminPageHeader
         eyebrow="People"
         title="Customers"
-        description="Registered customer accounts. Guest orders are visible under Orders but do not create an account."
+        description="Registered customer accounts and the catalogue activity they have saved. Purchases are arranged directly on WhatsApp, so this area does not process payments or orders."
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -133,19 +136,15 @@ export default async function AdminCustomersPage({
                 <tr className="border-b border-line bg-soft/60 text-[0.52rem] uppercase tracking-[0.12em] text-muted/60">
                   <th className="px-4 py-2.5 font-semibold">Customer</th>
                   <th className="px-3 py-2.5 font-semibold">Joined</th>
-                  <th className="px-3 py-2.5 font-semibold">Orders</th>
                   <th className="px-3 py-2.5 font-semibold">Saved addresses</th>
-                  <th className="px-3 py-2.5 font-semibold">Lifetime value</th>
+                  <th className="px-3 py-2.5 font-semibold">Bag items</th>
+                  <th className="px-3 py-2.5 font-semibold">Wishlist</th>
+                  <th className="px-3 py-2.5 font-semibold">Searches</th>
                   <th className="px-4 py-2.5 text-right font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {customers.map((customer) => {
-                  const spend = customer.orders.reduce(
-                    (sum, order) => sum + order.total,
-                    0,
-                  );
-                  return (
+                {customers.map((customer) => (
                     <tr key={customer.id} className="transition hover:bg-soft/50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
@@ -166,19 +165,17 @@ export default async function AdminCustomersPage({
                       <td className="px-3 py-3 text-muted">
                         {formatDate(customer.createdAt)}
                       </td>
-                      <td className="px-3 py-3">
-                        <Link
-                          href={`/admin/orders?q=${encodeURIComponent(customer.email)}`}
-                          className="font-medium text-forest hover:text-bright"
-                        >
-                          {customer._count.orders}
-                        </Link>
-                      </td>
                       <td className="px-3 py-3 text-muted">
                         {customer._count.addresses}
                       </td>
-                      <td className="px-3 py-3 font-medium">
-                        {formatPrice(spend)}
+                      <td className="px-3 py-3 text-muted">
+                        {customer._count.cartItems}
+                      </td>
+                      <td className="px-3 py-3 text-muted">
+                        {customer._count.wishlist}
+                      </td>
+                      <td className="px-3 py-3 text-muted">
+                        {customer._count.searchHistory}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span
@@ -198,8 +195,7 @@ export default async function AdminCustomersPage({
                         </span>
                       </td>
                     </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
           </div>

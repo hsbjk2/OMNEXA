@@ -8,11 +8,11 @@ import { formatPrice } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Terms & conditions",
   description:
-    "The terms that apply to browsing, accounts and demo orders on the OMNEXA demonstration storefront.",
+    "The terms that apply to browsing, accounts and WhatsApp product enquiries on the OMNEXA demonstration storefront.",
   openGraph: {
     title: "Terms & conditions — OMNEXA",
     description:
-      "How the OMNEXA demonstration storefront works, what demo data means and the limits of the preview.",
+      "How the OMNEXA catalogue and WhatsApp enquiry model works, and what demonstration data means.",
   },
 };
 
@@ -26,16 +26,19 @@ export default async function TermsPage() {
     <PolicyPage
       title="Terms"
       eyebrow="Legal"
-      intro="The ground rules for using this working preview — including what is demonstration data and what is a real transaction."
+      intro="The ground rules for using this catalogue and shopping-assistance storefront — including what is demonstration data and how a WhatsApp enquiry differs from a completed purchase."
       currentHref="/policies/terms"
       settings={settings}
       notice={
         <>
-          <strong className="font-semibold">This is a preview, not a live shop.</strong>{" "}
-          Products, prices, stock and photography are demonstration data. Orders
-          can be placed and managed end to end, but no money is collected, no
-          courier is dispatched and no contract of sale is formed. A live
-          operator must replace these terms with reviewed legal copy.
+          <strong className="font-semibold">
+            This is a catalogue, not an online checkout.
+          </strong>{" "}
+          OMNEXA does not process payments or confirm orders on this website.
+          Products, prices, stock and photography are demonstration data. A
+          WhatsApp message is an enquiry until the seller confirms availability,
+          the final total and payment arrangements. A live operator must replace
+          these terms with reviewed legal copy.
         </>
       }
       sections={[
@@ -45,42 +48,71 @@ export default async function TermsPage() {
             <>
               <p>
                 These terms apply to everyone who browses OMNEXA, creates an
-                account or places a demo order. By using the site you accept
+                account or sends a product enquiry. By using the site you accept
                 them. If you do not agree, please do not use the store.
               </p>
               <p>
                 You must be at least 18 years old and able to enter into a
-                binding contract to create an account or order. The store is
-                operated as a technical demonstration and may be changed,
-                reset, suspended or taken offline without notice.
+                binding contract to create an account or purchase from the
+                seller. The storefront is operated as a technical demonstration
+                and may be changed, reset, suspended or taken offline without
+                notice.
               </p>
             </>
           ),
         },
         {
-          heading: "Demo catalogue and product information",
+          heading: "The catalogue and demonstration data",
           body: (
             <>
               <p>
-                Everything in the seeded catalogue — product names, descriptions,
-                prices, original prices, stock counts, categories and images —
-                is demonstration data. Demo products are labelled throughout
-                the store and may not correspond to a real item that can be
-                bought. Photography is licensed stand-in imagery, credited on
-                the <Link href="/credits">credits page</Link>.
+                Everything in the seeded catalogue — product names,
+                descriptions, prices, original prices, stock counts, categories
+                and images — is demonstration data. Demo products are labelled
+                throughout the store and may not correspond to a real item that
+                can be bought. Photography is licensed stand-in imagery, credited
+                on the <Link href="/credits">credits page</Link>.
               </p>
               <p>
                 Colours and finishes can look different between screens. The
                 store does not publish invented ratings, reviews, testimonials or
-                sales counters, and any product detail should be treated as
-                illustrative until the operator replaces it with verified
+                sales counters. Product details should be treated as
+                illustrative until the operator replaces them with verified
                 information.
               </p>
               <p>
-                Availability is checked again on the server when an order is
-                placed. If an item becomes unavailable, the order is refused
-                rather than oversold. The admin panel can also move products
-                between available, out of stock and coming soon.
+                Availability, variants and stock can change. The seller will
+                confirm current availability in your WhatsApp conversation; the
+                website does not reserve stock or guarantee that an item is
+                available.
+              </p>
+            </>
+          ),
+        },
+        {
+          heading: "WhatsApp enquiries, not online orders",
+          body: (
+            <>
+              <p>
+                From a product page or your bag, OMNEXA prepares a WhatsApp
+                message containing the products, variants, quantities, unit
+                prices, estimated total and the delivery details you enter. You
+                review and send that message yourself. The website does not send
+                the message, create an order, take payment or reserve stock.
+              </p>
+              <p>
+                The message is an enquiry. No contract of sale is formed and no
+                order is accepted until the seller confirms availability, the
+                final price and delivery arrangements with you directly in the
+                chat. The seller may decline an enquiry where an item is
+                unavailable, where a listing or price error is apparent, or where
+                the request appears abusive.
+              </p>
+              <p>
+                Only send delivery details that you are authorised to share.
+                Please do not include card numbers, UPI PINs, banking
+                credentials or other payment secrets in a WhatsApp message.
+                OMNEXA does not ask for them on this website.
               </p>
             </>
           ),
@@ -100,7 +132,7 @@ export default async function TermsPage() {
                 </li>
                 <li>
                   Do not share your session or attempt to access another
-                  person&apos;s account, orders or admin tools.
+                  person&apos;s account, saved data or admin tools.
                 </li>
                 <li>
                   Tell the store promptly if you believe your account has been
@@ -108,53 +140,33 @@ export default async function TermsPage() {
                 </li>
               </ul>
               <p>
-                The store may suspend or remove an account that breaches these
-                terms, abuses the demo environment or interferes with its
-                operation. Admin access is restricted by server-side role
+                Guest carts, wishlists, search history and recently viewed
+                products are stored in your browser and merged into your account
+                when you sign in. The store may suspend or remove an account that
+                breaches these terms, abuses the environment or interferes with
+                its operation. Admin access is restricted by server-side role
                 checks; attempting to bypass them is prohibited.
               </p>
             </>
           ),
         },
         {
-          heading: "Orders and acceptance",
+          heading: "Prices and delivery estimates",
           body: (
             <>
               <p>
-                Submitting the checkout form is an offer to place a demo order.
-                The server validates the catalogue, live stock and prices, then
-                records the order and decrements stock in one transaction. An
-                order confirmation is displayed immediately with a private
-                access link; it is not a promise that goods will be dispatched.
-              </p>
-              <p>
-                The store may refuse or cancel an order where an item is
-                unavailable, where a price or listing error is apparent, where
-                the order appears abusive, or where the demonstration data has
-                been reset. Orders are completed on WhatsApp. This website does
-                not collect card details or operate an online payment gateway;
-                the seller confirms the payment options in chat, and dispatch
-                follows payment confirmation.
-              </p>
-            </>
-          ),
-        },
-        {
-          heading: "Prices and charges",
-          body: (
-            <>
-              <p>
-                Prices are shown in Indian rupees. The demo catalogue does not
+                Prices are shown in Indian rupees. The catalogue does not
                 configure a tax regime, so the displayed price is the
-                product&apos;s listed amount and the tax treatment must be
-                defined by the operator before any live sale.
+                product&apos;s listed amount; the operator must define the tax
+                treatment before any live sale.
               </p>
               <p>
-                Shipping is calculated on the server: a flat{" "}
-                {formatPrice(shipping.rate)} charge applies below a{" "}
-                {formatPrice(shipping.threshold)} product subtotal, and shipping
-                is free at or above that threshold. The order total recorded at
-                checkout is the amount shown on the confirmation page. See the{" "}
+                For guidance, a flat {formatPrice(shipping.rate)} delivery
+                estimate applies below a {formatPrice(shipping.threshold)}{" "}
+                product subtotal, and the estimate shows complimentary delivery
+                at or above that threshold. These are estimates only. The seller
+                confirms the final delivery charge, total and payment method in
+                the WhatsApp conversation. See the{" "}
                 <Link href="/policies/shipping">shipping policy</Link> for
                 details.
               </p>
@@ -165,26 +177,48 @@ export default async function TermsPage() {
           heading: "Delivery",
           body: (
             <p>
-              This demonstration does not dispatch orders and has no courier
-              integration or delivery service levels. The checkout records an
-              address and an order status; an admin can move the status through
-              pending, confirmed, packed, shipped and delivered for
-              demonstration purposes. Dispatch times, serviceable PIN codes and
-              tracking partners still need to be supplied by the operator. See{" "}
+              This demonstration does not dispatch parcels and has no courier
+              integration or delivery service levels. Delivery is arranged
+              directly between you and the seller after the WhatsApp conversation
+              confirms availability and payment. Dispatch times, serviceable PIN
+              codes and tracking partners must be supplied by the operator. See{" "}
               <Link href="/policies/shipping">shipping</Link>.
             </p>
           ),
         },
         {
-          heading: "Returns and cancellations",
+          heading: "Returns, cancellations and refunds",
           body: (
             <p>
               No live returns operation is running and a final return window has
-              not been set. Cancellation and damaged-item guidance is set out on
+              not been set. Because purchases are arranged directly with the
+              seller, cancellation, damaged-item and refund discussions happen in
+              the same WhatsApp conversation. The current position is set out on
               the <Link href="/policies/returns">return policy</Link>. Those
-              sections are transparency placeholders and will be replaced
-              before the store accepts real orders.
+              sections are transparency placeholders and will be replaced before
+              the store accepts real purchases.
             </p>
+          ),
+        },
+        {
+          heading: "Marketplace links",
+          body: (
+            <>
+              <p>
+                Individual products may link to Amazon or Flipkart when the
+                seller has added a listing URL, and the store may link to its
+                marketplace storefronts. Those links open third-party websites.
+                OMNEXA does not control their content, availability, pricing,
+                fulfilment or privacy practices. Any purchase made on a
+                marketplace is governed by that marketplace&apos;s terms.
+              </p>
+              <p>
+                Marketplace links are shipped empty by default. No seller
+                profile or storefront URL has been invented for this build, so
+                marketplace sections only appear when a real URL has been
+                configured.
+              </p>
+            </>
           ),
         },
         {
@@ -192,9 +226,9 @@ export default async function TermsPage() {
           body: (
             <>
               <p>
-                The OMNEXA name, brand mark, page layouts and the storefront
-                code are part of this project. You may browse and use the store
-                as a customer, but you may not copy the site, resell its code or
+                The OMNEXA name, brand mark, page layouts and the storefront code
+                are part of this project. You may browse and use the store as a
+                customer, but you may not copy the site, resell its code or
                 present the brand as your own without permission.
               </p>
               <p>
@@ -202,26 +236,6 @@ export default async function TermsPage() {
                 and are used under the licences recorded on the{" "}
                 <Link href="/credits">credits page</Link>. Product names and
                 descriptions are demo copy written for this project.
-              </p>
-            </>
-          ),
-        },
-        {
-          heading: "Third-party links and marketplaces",
-          body: (
-            <>
-              <p>
-                The store can link to Instagram, Facebook, Amazon, Flipkart or a
-                map when those URLs are configured in settings. It is not
-                affiliated with those services unless a live operator states
-                otherwise, and it does not control their content, availability,
-                pricing or privacy practices.
-              </p>
-              <p>
-                Marketplace links are shipped empty by default. No seller
-                profile or storefront URL has been invented for this build, so
-                marketplace sections honestly report that a link has not been
-                configured.
               </p>
             </>
           ),
@@ -242,7 +256,7 @@ export default async function TermsPage() {
                   right to use;
                 </li>
                 <li>
-                  impersonate another person, misrepresent an order or submit
+                  impersonate another person, misrepresent an enquiry or submit
                   another person&apos;s details without permission;
                 </li>
                 <li>
@@ -286,9 +300,9 @@ export default async function TermsPage() {
                 notice.
               </p>
               <p>
-                To the extent permitted by the law that ultimately applies,
-                the operator would not be liable for indirect or consequential
-                loss arising from use of this preview. Because no operator
+                To the extent permitted by the law that ultimately applies, the
+                operator would not be liable for indirect or consequential loss
+                arising from use of this preview. Because no operator
                 jurisdiction has been supplied, this section is not a final
                 limitation clause and must be reviewed before live sales.
               </p>
@@ -312,9 +326,8 @@ export default async function TermsPage() {
           body: (
             <>
               <p>
-                These terms are dated 18 November 2026 and may be updated as the
-                store evolves. The current version will always be published on
-                this page.
+                These terms may be updated as the store evolves. The current
+                version will always be published on this page.
               </p>
               <p>
                 Questions about these terms can be sent to{" "}

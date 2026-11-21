@@ -1,54 +1,69 @@
 # OMNEXA
 
-A complete, working beauty storefront and admin platform for OMNEXA — skincare, makeup, makeup kits, artificial jewellery and accessories. The storefront, authentication, persisted shopping state, checkout, customer account and protected admin panel are real application code, not static mockups.
+A premium beauty, skincare, makeup, artificial-jewellery and accessories catalogue with a WhatsApp-based ordering flow for retail and wholesale customers.
 
-The catalogue is intentionally **demo data**: seeded products, prices, stock and stand-in photography are labelled as such throughout the UI.
+OMNEXA is a product discovery and shopping-assistance storefront, not an online payment shop. Customers browse the catalogue, build a persistent bag and wishlist, enter delivery details, and continue the conversation with the seller on WhatsApp. The website does not collect payment details, create online orders, reserve stock or claim that an order is confirmed.
 
 ## Stack
 
-- Next.js 15.5 (App Router, Server Actions, route groups)
+- Next.js 16.4 (App Router, Server Actions, route groups)
 - React 19 + TypeScript
 - Tailwind CSS v4
-- Prisma 6 with SQLite
+- Prisma 6 with SQLite locally and Cloudflare D1 in production
+- Cloudflare R2 for uploaded catalogue images
 - bcryptjs, opaque database-backed sessions, httpOnly cookies
 - Framer Motion, lucide-react, Zod, sharp
+
+## Ordering model
+
+1. Browse the catalogue or search for a product.
+2. Choose a variant and quantity, then add the piece to the bag.
+3. Review the bag or open the delivery form at `/order-request`.
+4. Enter a name, mobile number, complete address, city, state, PIN code and optional delivery instructions.
+5. The server validates the product IDs, availability, selected variants and live prices against the catalogue.
+6. A prefilled `https://wa.me/<number>?text=...` message is generated with the products, quantities, variants, unit prices, estimated total, product URLs, image URLs and delivery details.
+7. The customer reviews and sends the message in WhatsApp. The seller confirms availability, delivery charges and payment arrangements in the chat.
+
+Individual product pages also have their own "Order on WhatsApp" action with a product-specific message. If the seller has configured Amazon or Flipkart listing URLs, the product page shows marketplace buttons that open in a new tab.
+
+The estimated delivery figure comes from `SHIPPING_FLAT_RATE` and `FREE_SHIPPING_THRESHOLD`. It is an estimate only; the seller confirms the final charge on WhatsApp.
 
 ## Features
 
 ### Storefront
 
-- Homepage with dismissible announcement, sticky responsive navigation, category dropdown, live search, cart and wishlist counters, editorial hero, six category cards, best sellers, new arrivals, coming soon with waitlist, business highlights, brand story, marketplace area, newsletter and full footer.
-- Catalogue at `/shop` plus category, new-arrival, coming-soon and search routes.
+- Homepage with announcement, responsive navigation, category dropdown, live search, bag and wishlist counts, editorial sections, best sellers, new arrivals, coming-soon waitlists, store location, marketplace area, newsletter and footer.
+- Catalogue at `/shop`, plus category, new-arrival, coming-soon and search routes.
 - Filtering by category, price band and availability; sorting; pagination; shareable query strings; empty and no-result states.
-- Live search suggestions from the published catalogue.
-- Product detail gallery, zoom, variants, stock state, quantity controls, related products, recently viewed and structured product data.
-- Persistent bag and wishlist: guests use local storage, signed-in customers sync to the database on sign-in and while signed in.
+- Product galleries, zoom, variants, stock state, quantity controls, related products, recently viewed and structured product data.
+- Persistent bag and wishlist: guests use local storage; signed-in customers sync to the database. Guest bag, wishlist, search history and recently viewed products merge into the account at sign-in.
 - Search history and recently viewed products, with clear options.
-- Cart drawer, dedicated cart page and order summary.
-- WhatsApp checkout with server-validated prices, stock and totals. Orders are recorded transactionally, stock is reserved, and the customer continues to WhatsApp with a prepared order message.
-- Private order confirmation and tracking pages, authorised by owner session or an unguessable order token.
+- Cart drawer and dedicated cart page with estimated totals.
+- WhatsApp product and cart enquiry flows with server-validated catalogue data and encoded messages.
+- Amazon and Flipkart product buttons, shown only when a complete URL has been saved.
 
 ### Authentication and account
 
-- Email/password sign-up and sign-in.
+- Email/password register, sign in and sign out.
 - Forgot-password and reset flows with hashed, expiring tokens.
-- Email verification (verification link is logged locally when no email provider is configured).
+- Email verification (the link is logged locally when no email provider is configured).
 - Optional Google sign-in when credentials are present; hidden otherwise.
-- Session tokens are random, hashed at rest, stored in httpOnly, SameSite cookies and revocable at sign-out.
+- Session tokens are random, hashed at rest, stored in httpOnly, SameSite cookies and revoked at sign-out.
 - Rate limiting on sensitive actions.
-- Account overview, order list/detail, address book, profile details, password change, email verification state and search-history controls.
-- Authoritative authorisation is checked server-side in layouts and actions, not only in middleware.
+- Account overview with saved bag, wishlist, recently viewed products, search history, saved addresses, profile details, password change and email-verification state.
+- Marketplace storefront links and a direct WhatsApp contact card in the account area.
+- No payment history or online order history is shown because OMNEXA does not process payments or create orders on the website.
 
 ### Admin
 
-- Separate protected admin shell with mobile navigation and role-based access.
-- Dashboard with live counts for orders, revenue, stock, products and audience.
-- Product CRUD, publish/feature/best-seller/new-arrival flags, availability, stock, variants, demo marking and multiple images.
-- Drag-and-drop image upload resized to WebP via sharp, stored under `public/uploads`; optional remote image URLs limited to Pexels/Unsplash or local paths.
+- Protected admin shell with mobile navigation and role-based access.
+- Dashboard with catalogue, stock, customer, saved bag, wishlist, address, message, newsletter and waitlist counts. No revenue or order-processing metrics.
+- Product CRUD, publish/feature/best-seller/new-arrival flags, availability, stock, variants, demo marking, multiple images and per-product Amazon/Flipkart URLs.
+- Drag-and-drop image upload validated in the API and stored in R2 on Workers; local development keeps the `public/uploads` fallback.
 - Category CRUD with image upload.
-- Order management with status and payment status updates; cancelling restores stock.
-- Customer list, audience messages, waitlist/newsletter entries and store settings.
-- Business location, map, social and marketplace URLs configurable; nothing is invented in the public UI.
+- Store settings for the WhatsApp business number, contact details, address, map, social profiles and marketplace storefront URLs.
+- Customer list, audience messages, waitlist and newsletter views.
+- No payment management or online order processing.
 
 ### Platform
 
@@ -56,8 +71,9 @@ The catalogue is intentionally **demo data**: seeded products, prices, stock and
 - Dynamic sitemap, robots rules, web manifest, favicons and OG image.
 - 404 and error boundaries, catalogue/product/account/admin loading skeletons.
 - Security headers and CSP in production middleware.
-- Responsive from small Android/iPhone widths through tablet, laptop and desktop.
-- Reduced-motion support, scroll progress, reveals, a scroll-driven 3D cabinet scene, a floating WhatsApp order button, back-to-top and accessible focus styles.
+- Responsive layouts from small Android/iPhone widths through tablet, laptop and desktop.
+- Reduced-motion support, scroll progress, reveals, a scroll-driven 3D cabinet scene, a floating WhatsApp button, back-to-top and accessible focus styles.
+- D1 bootstrap that creates the schema and copies the public catalogue on first boot, with additive column migrations for existing databases.
 
 ## Getting started
 
@@ -78,12 +94,13 @@ Open <http://localhost:3000>.
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Prisma SQLite URL. Defaults locally to `file:./dev.db`. |
-| `APP_URL` | Public origin used by metadata, sitemap and links in auth email. |
+| `OMNEXA_DATABASE` | Adapter selection: `auto` (default) uses Cloudflare D1 when the `DB` binding exists, otherwise local SQLite. Set `d1` or `sqlite` to force one. |
+| `APP_URL` | Public origin used by metadata, sitemap, absolute product/image links and auth email. |
 | `ADMIN_EMAIL` | Bootstrap admin email used only by `prisma/seed.ts`. |
 | `ADMIN_PASSWORD` | Bootstrap admin password used only by the seed. Use a long unique value. |
 | `ADMIN_NAME` | Bootstrap admin display name. |
-| `SHIPPING_FLAT_RATE` | Flat shipping charge in INR below the free threshold. |
-| `FREE_SHIPPING_THRESHOLD` | Product subtotal at which shipping becomes free. |
+| `SHIPPING_FLAT_RATE` | Flat delivery estimate in INR below the free threshold. |
+| `FREE_SHIPPING_THRESHOLD` | Product subtotal at which the delivery estimate becomes complimentary. |
 | `STORE_CONTACT_EMAIL` | Default public contact email if not set in admin settings. |
 | `RESEND_API_KEY` | Optional Resend key for verification/reset email. |
 | `EMAIL_FROM` | From address for transactional email. |
@@ -92,6 +109,8 @@ Open <http://localhost:3000>.
 
 The seeded admin account is created from `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Those credentials live only in `.env`/the database — never in frontend code. Change them before any real deployment.
 
+The seller's WhatsApp number is stored in **Admin → Settings** and is never hardcoded into storefront components. Catalogue links only publish when a complete URL is saved.
+
 ### Scripts
 
 ```bash
@@ -99,86 +118,49 @@ npm run dev        # development server
 npm run build      # prisma generate + production build
 npm start          # production server
 npm run typecheck  # TypeScript only
-npm run db:push    # sync schema to SQLite
+npm run db:push    # sync schema to local SQLite
 npm run db:seed    # seed demo catalogue, categories and admin user
 npm run db:setup   # generate + push + seed
+npm run db:generate:d1 # regenerate the D1 seed SQL from local SQLite
 ```
 
-Reseeding is destructive to the demo dataset. It recreates the catalogue, admin account and supporting demo records.
+`db:push` reconciles the local SQLite database with the Prisma schema. Back up `prisma/dev.db` before running it against a database whose legacy order tables must be retained. No destructive migration is run by the app at runtime.
+
+## Database and Workers
+
+The Prisma schema covers users, sessions, verification tokens, addresses, categories, products, cart items, wishlist items, search history, recently viewed products, newsletter subscribers, waitlist entries, contact messages and site settings. Legacy `Order` and `OrderItem` tables are no longer part of the application schema and are left untouched in existing databases by the runtime; no order is created by the website.
+
+On Cloudflare, `lib/d1.ts` creates the schema once per database and seeds the public catalogue from `lib/d1-sql.generated.ts`. Additive column migrations keep older D1 databases working without dropping user data. A one-time, idempotent DateTime migration converts legacy integer/SQLite-style DateTime values to the ISO-8601 text the D1 adapter expects; it never touches non-date columns. `npm run db:generate:d1` regenerates the seed SQL with ISO DateTime values from `prisma/dev.db`. Uploaded images use the `FILES` R2 binding in production and `public/uploads` locally.
 
 ## Structure
 
-```
+```text
 app/
-  (store)/            public storefront, account and order pages
+  (store)/            storefront, cart, order-request, account and policy pages
   (auth)/             login, register, verification and password flows
   admin/              role-protected admin panel
-  actions/            server actions for auth, shop, checkout, account, admin
-  api/                search suggestions, admin upload, Google OAuth
-components/           site, product, shop, checkout, account, admin, UI
-lib/                  auth, catalog, orders, settings, shipping, validators
-prisma/               schema, seed, local SQLite database
-public/images/        licensed stand-in photography + credits manifest
-public/uploads/       admin-uploaded product/category images
+  actions/            server actions for auth, shop, account, enquiries and admin
+  api/                search suggestions, admin upload, uploaded-image serving, Google OAuth
+components/           site, product, shop, cart, order, account, admin and UI
+lib/                  auth, catalog, products, settings, shipping, WhatsApp helpers
+prisma/               schema, seed and local SQLite database
+scripts/              D1 SQL generator
 ```
 
-## Store settings
+## Verification checklist
 
-Most operational content is managed in **Admin → Settings**:
-
-- business name, verified store address, phone/WhatsApp and contact email;
-- Google Maps embed, directions URL and optional Google Business listing URL;
-- Instagram, Facebook and optional WhatsApp channel URLs;
-- Amazon and Flipkart marketplace links.
-
-If a location or marketplace link has not been configured, the public UI says so instead of displaying a fabricated address, coordinate or seller page. The contact and homepage maps only render when a valid embed URL has been supplied. Instagram, Facebook and the WhatsApp channel stay hidden until real URLs are entered; the order WhatsApp button uses the configured number.
-
-Shipping values come from environment configuration (`SHIPPING_FLAT_RATE`, `FREE_SHIPPING_THRESHOLD`) and are passed to the client for display. The server recalculates them when the order is placed.
-
-## Demo-data and content policy
-
-- Seeded products carry `isDemo`, explicit badges and catalogue notices.
-- Prices, stock, ratings-free copy and product details are illustrative. There are no invented reviews, testimonials, sales counters or countdowns.
-- Photography is licensed Pexels stand-in imagery, credited at `/credits`.
-- Marketplace links and the store address are configuration, not fabricated defaults.
-- Policy pages describe the real implementation and clearly mark decisions that the operator has not supplied (return window, legal entity, jurisdiction, dispatch SLAs).
-
-## Security notes
-
-- Passwords are bcrypt-hashed; session and verification tokens are random and stored hashed.
-- Cookies are httpOnly and SameSite; session lifetime is 30 days and revoked on sign-out.
-- Admin routes check the database-backed role on the server. Middleware only performs preliminary cookie redirects.
-- Order confirmation requires the owning signed-in user or the order's private access token.
-- Uploads require admin authentication and are normalised through sharp.
-- Production middleware adds security headers and a CSP. Review it after adding any third-party integration.
-- Server actions validate inputs with Zod and re-check stock and prices transactionally.
-
-## Production deployment checklist
-
-1. Set a strong, unique `ADMIN_PASSWORD` and `APP_URL`; use HTTPS.
-2. Do not reuse the development database or admin credentials.
-3. Ensure **persistent writable storage** for the SQLite database and `public/uploads`, or replace them with managed database/object storage. Serverless filesystems are ephemeral.
-4. Configure Resend (or another email provider) so verification and reset links are delivered instead of logged.
-5. Add real store address/coordinates, map URLs, social and marketplace links in admin settings.
-6. Replace demo catalogue content and stand-in photography; update `/credits`.
-7. Have the privacy, terms, shipping and return pages reviewed for the operator's legal entity and jurisdiction; set a real return window and dispatch service levels.
-8. Keep the WhatsApp order number current in admin settings; checkout uses it for the order handoff. No payment gateway is connected.
-9. Add courier/tracking integration if live shipment tracking is required.
-10. Back up the database and uploads; monitor sessions, uploads and rate limits.
-11. Re-run `npm run typecheck`, `npm run build`, and the manual test checklist below.
-12. Review the CSP and security headers against any new third-party scripts.
-
-## Manual test checklist
-
-- Register, verify, sign in, sign out; test forgot/reset password.
+- Run `npm run typecheck` and `npm run build`.
+- Register, verify, sign in and sign out; test forgot/reset password.
 - Confirm guest bag/wishlist survive refresh and merge into an account at sign-in.
 - Filter/sort/paginate `/shop`; test search suggestions and no-results.
 - Open a product, switch variants, adjust quantity and add to bag.
-- Complete checkout, confirm the order page opens with the prepared WhatsApp message, then verify the order in the account and admin.
-- Mark the order paid in admin, move it through packing/shipping, and confirm cancellation restores stock.
+- Use the product page "Order on WhatsApp" action and confirm the message contains the product, variant, quantity, price, product link and image URL where available.
+- Add multiple products, open `/order-request`, enter delivery details, submit, and confirm the generated `wa.me` message contains every product, quantity, variant, unit price, estimated total, product URLs, image URLs and the delivery address.
+- Confirm no order is created, no payment is collected and the page clearly says the seller will confirm availability, delivery charges and payment.
+- Save an address from the account area and reuse it in the enquiry form.
+- Confirm marketplace buttons appear only when their URLs are configured and open in a new tab.
 - Sign in as an admin and verify customer access to `/admin` is denied.
 - Create/edit/delete a product and category; upload an image; toggle demo/featured/coming-soon flags.
-- Update order status; cancel and confirm stock is restored.
 - Test the contact/waitlist/newsletter forms and admin audience views.
 - Visit the site at 320, 375, 768, 1024 and 1440 px; check for horizontal scroll and overlapping controls.
 - Check keyboard focus, dialogs, reduced-motion behaviour and the 404 route.
@@ -188,11 +170,12 @@ Shipping values come from environment configuration (`SHIPPING_FLAT_RATE`, `FREE
 ## Known limitations
 
 - The catalogue, pricing and stock are demo content; do not treat them as a live offer.
-- Checkout saves the order and hands it to WhatsApp. Payment is arranged with the seller in chat; no payment gateway is connected.
-- Demo orders are never dispatched and no courier tracking exists.
+- No payment gateway, checkout, online order creation, order status, payment status or order history is provided.
+- A WhatsApp message is prepared by the website but sent by the customer. The website cannot know whether it was delivered, read or accepted.
+- There is no enquiry-history record; the WhatsApp chat is the record of the conversation.
+- Demo products are never dispatched and no courier tracking exists.
 - Return window, refund process, legal entity, jurisdiction and final policy wording are pending operator input.
 - Email delivery and Google sign-in remain inactive until credentials are configured.
-- SQLite and local image uploads suit a single persistent host; a multi-instance deployment needs managed storage.
 - Analytics and marketing pixels are intentionally absent. Add them only with consent and a corresponding privacy update.
 
 ## Photography

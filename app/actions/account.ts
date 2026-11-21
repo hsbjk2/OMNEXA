@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   createSession,
@@ -55,7 +56,7 @@ export async function updateProfileAction(
 
   revalidatePath("/account/profile");
   revalidatePath("/account");
-  revalidatePath("/checkout");
+  revalidatePath("/order-request");
   return { status: "success", message: "Your profile has been updated." };
 }
 
@@ -147,37 +148,41 @@ export async function saveAddressAction(
 
   const makeDefault = data.isDefault || (await prisma.address.count({ where: { userId: current.user.id } })) === 0;
 
-  await prisma.$transaction(async (tx) => {
-    if (makeDefault) {
-      await tx.address.updateMany({
+  // D1 only supports batch transactions, not callback-based interactive ones.
+  const operations: Prisma.PrismaPromise<unknown>[] = [];
+  if (makeDefault) {
+    operations.push(
+      prisma.address.updateMany({
         where: { userId: current.user.id },
         data: { isDefault: false },
-      });
-    }
+      }),
+    );
+  }
 
-    const payload = {
-      label: data.label,
-      fullName: data.fullName,
-      phone: data.phone,
-      line1: data.line1,
-      line2: data.line2 || null,
-      city: data.city,
-      state: data.state,
-      pincode: data.pincode,
-      isDefault: makeDefault,
-    };
+  const payload = {
+    label: data.label,
+    fullName: data.fullName,
+    phone: data.phone,
+    line1: data.line1,
+    line2: data.line2 || null,
+    city: data.city,
+    state: data.state,
+    pincode: data.pincode,
+    isDefault: makeDefault,
+  };
 
-    if (data.id) {
-      await tx.address.update({ where: { id: data.id }, data: payload });
-    } else {
-      await tx.address.create({
-        data: { ...payload, userId: current.user.id },
-      });
-    }
-  });
+  operations.push(
+    data.id
+      ? prisma.address.update({ where: { id: data.id }, data: payload })
+      : prisma.address.create({
+          data: { ...payload, userId: current.user.id },
+        }),
+  );
+
+  await prisma.$transaction(operations);
 
   revalidatePath("/account/addresses");
-  revalidatePath("/checkout");
+  revalidatePath("/order-request");
   return {
     status: "success",
     message: data.id ? "Address updated." : "Address saved.",
@@ -201,7 +206,7 @@ export async function deleteAddressAction(
   });
 
   revalidatePath("/account/addresses");
-  revalidatePath("/checkout");
+  revalidatePath("/order-request");
   return { status: "success", message: "Address removed." };
 }
 
@@ -232,6 +237,6 @@ export async function setDefaultAddressAction(
   ]);
 
   revalidatePath("/account/addresses");
-  revalidatePath("/checkout");
+  revalidatePath("/order-request");
   return { status: "success", message: "Default address updated." };
 }

@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
+    "db:generate:d1": "node scripts/generate-d1-sql.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -73,7 +73,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       })),
     ];
-  } catch {
+  } catch (error) {
+    console.error(
+      "[db] Could not build the catalogue sitemap; using static routes.",
+      error,
+    );
     return staticRoutes;
   }
 }

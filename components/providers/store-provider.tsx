@@ -9,11 +9,13 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 import { MotionConfig } from "framer-motion";
 import type { ProductCardData } from "@/lib/products";
 import type { ServerShopState } from "@/app/actions/shop";
 import {
   clearSearchHistoryAction,
+  mergeGuestActivity,
   recordProductView,
   recordSearch,
   syncShopState,
@@ -111,6 +113,29 @@ function mergeUniqueWishlist(
   return Array.from(map.values()).slice(0, 100);
 }
 
+function mergeSearchHistory(first: string[], second: string[]) {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+  for (const item of [...first, ...second]) {
+    const key = item.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(item);
+  }
+  return merged.slice(0, 8);
+}
+
+function mergeRecentlyViewed(
+  first: ProductCardData[],
+  second: ProductCardData[],
+) {
+  const map = new Map<string, ProductCardData>();
+  for (const item of [...first, ...second]) {
+    if (!map.has(item.id)) map.set(item.id, item);
+  }
+  return Array.from(map.values()).slice(0, 8);
+}
+
 function mergeCart(server: CartLine[], guest: CartLine[]) {
   const map = new Map<string, CartLine>();
   for (const line of server) {
@@ -157,8 +182,13 @@ export function StoreProvider({
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [ready, setReady] = useState(false);
 
+  const router = useRouter();
   const toastId = useRef(0);
   const timers = useRef<number[]>([]);
+  const guestMergedFor = useRef<string | null>(null);
+  const guestMergePending = useRef(false);
+  const guestActivityMerged = useRef(false);
+  const guestShopSynced = useRef(true);
   const lastSynced = useRef<string>(
     JSON.stringify({
       cart: initialState?.cart ?? [],
@@ -179,6 +209,28 @@ export function StoreProvider({
   const dismissToast = useCallback((id: number) => {
     setToasts((current) => current.filter((item) => item.id !== id));
   }, []);
+
+  const completeGuestMerge = useCallback(() => {
+    if (
+      !guestMergePending.current ||
+      !guestActivityMerged.current ||
+      !guestShopSynced.current
+    ) {
+      return;
+    }
+
+    guestMergePending.current = false;
+    try {
+      window.localStorage.removeItem(GUEST_KEY);
+    } catch {
+      // Ignore storage failures.
+    }
+    router.refresh();
+    toast(
+      "Your saved bag, wishlist and browsing history have been added to your account.",
+      "info",
+    );
+  }, [router, toast]);
 
   useEffect(() => {
     return () => {
@@ -208,7 +260,13 @@ export function StoreProvider({
       cart,
       wishlist: wishlist.map((item) => item.id),
     });
-    if (signature === lastSynced.current) return;
+    if (signature === lastSynced.current) {
+      if (guestMergePending.current) {
+        guestShopSynced.current = true;
+        completeGuestMerge();
+      }
+      return;
+    }
 
     const timer = window.setTimeout(async () => {
       const result = await syncShopState({
@@ -223,10 +281,23 @@ export function StoreProvider({
         toast("Your bag could not be synced. Please sign in again.", "error");
       } else {
         lastSynced.current = signature;
+        if (guestMergePending.current) {
+          guestShopSynced.current = true;
+          completeGuestMerge();
+        }
       }
     }, 450);
     return () => window.clearTimeout(timer);
-  }, [cart, wishlist, ready, user, toast, searchHistory, recentlyViewed]);
+  }, [
+    cart,
+    wishlist,
+    ready,
+    user,
+    toast,
+    searchHistory,
+    recentlyViewed,
+    completeGuestMerge,
+  ]);
 
   useEffect(() => {
     let guest: GuestState | null = null;
@@ -237,20 +308,69 @@ export function StoreProvider({
     }
 
     if (user) {
-      if (guest && (guest.cart.length > 0 || guest.wishlist.length > 0)) {
-        setCart((current) => mergeCart(current, guest!.cart));
-        setWishlist((current) =>
-          mergeUniqueWishlist(current, guest!.wishlist),
-        );
-        toast(
-          "Your saved bag and wishlist have been added to your account.",
-          "info",
-        );
-        try {
-          window.localStorage.removeItem(GUEST_KEY);
-        } catch {
-          // Ignore storage failures.
+      if (guestMergedFor.current === user.id) {
+        setReady(true);
+        return;
+      }
+      guestMergedFor.current = user.id;
+
+      const hasGuestActivity = Boolean(
+        guest &&
+          (guest.cart.length > 0 ||
+            guest.wishlist.length > 0 ||
+            guest.searchHistory.length > 0 ||
+            guest.recentlyViewed.length > 0),
+      );
+
+      if (guest && hasGuestActivity) {
+        guestMergePending.current = true;
+        guestActivityMerged.current = false;
+        guestShopSynced.current =
+          guest.cart.length === 0 && guest.wishlist.length === 0;
+
+        if (guest.cart.length > 0) {
+          setCart((current) => mergeCart(current, guest!.cart));
         }
+        if (guest.wishlist.length > 0) {
+          setWishlist((current) =>
+            mergeUniqueWishlist(current, guest!.wishlist),
+          );
+        }
+        if (guest.searchHistory.length > 0) {
+          setSearchHistory((current) =>
+            mergeSearchHistory(guest!.searchHistory, current),
+          );
+        }
+        if (guest.recentlyViewed.length > 0) {
+          setRecentlyViewed((current) =>
+            mergeRecentlyViewed(guest!.recentlyViewed, current),
+          );
+        }
+
+        const guestActivity = {
+          searchHistory: guest.searchHistory,
+          recentlyViewed: guest.recentlyViewed.map((item) => item.id),
+        };
+
+        void (async () => {
+          try {
+            const result = await mergeGuestActivity(guestActivity);
+            if (result.status !== "success") {
+              toast(
+                "Your saved bag and wishlist were merged, but your browsing history could not be saved yet. It remains in this browser.",
+                "error",
+              );
+              return;
+            }
+            guestActivityMerged.current = true;
+            completeGuestMerge();
+          } catch {
+            toast(
+              "Your saved bag and wishlist were merged, but your browsing history could not be saved yet. It remains in this browser.",
+              "error",
+            );
+          }
+        })();
       }
     } else if (guest) {
       setCart(guest.cart);
@@ -261,7 +381,7 @@ export function StoreProvider({
     setReady(true);
     // Guest data is merged once per signed-in session.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, completeGuestMerge, toast]);
 
   const addToCart = useCallback<StoreContextValue["addToCart"]>(
     (product, options) => {

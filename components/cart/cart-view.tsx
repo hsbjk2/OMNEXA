@@ -13,6 +13,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useStore } from "@/components/providers/store-provider";
+import { WhatsAppIcon } from "@/components/site/social-icons";
 import { formatPrice } from "@/lib/utils";
 
 export function CartView() {
@@ -216,11 +217,11 @@ export function CartView() {
               <p className="eyebrow text-forest/50">Order summary</p>
               <div className="mt-5 space-y-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted">Subtotal</span>
+                  <span className="text-muted">Estimated subtotal</span>
                   <span className="font-medium text-ink">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted">Delivery</span>
+                  <span className="text-muted">Estimated delivery</span>
                   <span className="font-medium text-ink">
                     {delivery === 0 ? "Complimentary" : formatPrice(delivery)}
                   </span>
@@ -228,7 +229,7 @@ export function CartView() {
                 <div className="h-px bg-line" />
                 <div className="flex items-baseline justify-between">
                   <span className="text-[0.7rem] font-bold uppercase tracking-[0.13em] text-forest">
-                    Total
+                    Estimated total
                   </span>
                   <span className="font-display text-3xl text-ink">
                     {formatPrice(subtotal + delivery)}
@@ -254,16 +255,21 @@ export function CartView() {
                 </p>
               )}
 
-              <Link href="/checkout" className="btn btn-forest mt-6 w-full">
-                Continue to checkout <ArrowRight className="size-3.5" />
+              <Link
+                href="/order-request"
+                className="btn btn-forest mt-6 w-full"
+              >
+                <WhatsAppIcon className="size-4" /> Order via WhatsApp
+                <ArrowRight className="size-3.5" />
               </Link>
               <p className="mt-3 text-center text-[0.62rem] leading-relaxed text-muted">
-                Order on WhatsApp · Secure server-validated checkout
+                Order enquiry only · No payment collected on this website
               </p>
               <div className="mt-5 flex items-start gap-2 border-t border-line pt-4 text-[0.62rem] leading-relaxed text-muted">
                 <Truck className="mt-0.5 size-3.5 shrink-0 text-forest/40" />
-                Delivery is calculated from the live store settings. The exact
-                total is always confirmed before you place the order.
+                Delivery is estimated from the live store settings. The seller
+                confirms the final delivery charge and payment arrangements on
+                WhatsApp before anything is dispatched.
               </div>
             </div>
           </aside>

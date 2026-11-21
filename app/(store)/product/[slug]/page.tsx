@@ -17,6 +17,7 @@ import {
 } from "@/lib/products";
 import { getRelatedProducts } from "@/lib/catalog";
 import { getShippingConfig } from "@/lib/shipping";
+import { getSiteSettings } from "@/lib/settings";
 import { absoluteUrl, formatPrice } from "@/lib/utils";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductPurchase } from "@/components/product/product-purchase";
@@ -65,7 +66,15 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   const product = toProductDetail(row);
   const related = await getRelatedProducts(row.categoryId, row.id, 4);
-  const shipping = getShippingConfig();
+  const [shipping, settings] = await Promise.all([
+    Promise.resolve(getShippingConfig()),
+    getSiteSettings(),
+  ]);
+  const imageUrl = product.images[0]
+    ? /^https?:\/\//i.test(product.images[0])
+      ? product.images[0]
+      : absoluteUrl(product.images[0])
+    : null;
   const details = (product.details || "")
     .split(/\n/)
     .map((line) => line.trim())
@@ -197,21 +206,27 @@ export default async function ProductPage({ params }: { params: Params }) {
               </div>
             )}
 
-            <ProductPurchase product={product} />
+            <ProductPurchase
+              product={product}
+              whatsapp={settings.whatsapp}
+              productUrl={absoluteUrl(`/product/${product.slug}`)}
+              imageUrl={imageUrl}
+            />
 
             <div className="mt-7 grid gap-3 border-t border-line pt-5 sm:grid-cols-2">
               <div className="flex items-start gap-2.5 text-[0.72rem] leading-relaxed text-muted">
                 <Truck className="mt-0.5 size-4 shrink-0 text-forest/50" strokeWidth={1.4} />
                 <p>
                   Flat {formatPrice(shipping.rate)} delivery. Complimentary
-                  above {formatPrice(shipping.threshold)}.
+                  above {formatPrice(shipping.threshold)}. Final delivery
+                  charges are confirmed on WhatsApp.
                 </p>
               </div>
               <div className="flex items-start gap-2.5 text-[0.72rem] leading-relaxed text-muted">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-forest/50" strokeWidth={1.4} />
                 <p>
-                  Order on WhatsApp. We save your order, then open a message
-                  with the seller who confirms payment and delivery.
+                  Send an enquiry on WhatsApp. Availability, delivery and
+                  payment are confirmed directly by the seller.
                 </p>
               </div>
             </div>
@@ -247,8 +262,9 @@ export default async function ProductPage({ params }: { params: Params }) {
                   <p>
                     Deliveries are flat {formatPrice(shipping.rate)}, with
                     complimentary shipping above{" "}
-                    {formatPrice(shipping.threshold)}. Orders are completed on
-                    WhatsApp, where the seller shares the payment options.
+                    {formatPrice(shipping.threshold)}. Every purchase starts as
+                    a WhatsApp enquiry, where the seller confirms availability,
+                    the final delivery charge and payment arrangements.
                   </p>
                   <p>
                     Read the full{" "}

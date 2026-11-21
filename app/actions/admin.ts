@@ -73,6 +73,8 @@ export async function saveProductAction(
     isDemo: formData.get("isDemo") === "on",
     variantLabel: formData.get("variantLabel") || "",
     variantOptions: formData.get("variantOptions") || "",
+    amazonUrl: formData.get("amazonUrl") || "",
+    flipkartUrl: formData.get("flipkartUrl") || "",
   });
 
   if (!parsed.success) {
@@ -161,6 +163,8 @@ export async function saveProductAction(
     variantOptions: variantOptions.length
       ? JSON.stringify(variantOptions)
       : null,
+    amazonUrl: data.amazonUrl?.trim() || null,
+    flipkartUrl: data.flipkartUrl?.trim() || null,
   };
 
   if (data.id) {
@@ -298,71 +302,6 @@ export async function deleteCategoryAction(formData: FormData) {
   redirect("/admin/categories?status=deleted");
 }
 
-export async function updateOrderAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  if (!(await isAdminUser())) return denied;
-
-  const id = formData.get("id");
-  const status = formData.get("status");
-  const paymentStatus = formData.get("paymentStatus");
-
-  if (typeof id !== "string") {
-    return { status: "error", message: "Missing order." };
-  }
-  if (
-    typeof status !== "string" ||
-    !["PENDING", "CONFIRMED", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"].includes(status)
-  ) {
-    return { status: "error", message: "Choose a valid order status." };
-  }
-  if (
-    typeof paymentStatus !== "string" ||
-    !["PENDING", "PAID", "REFUNDED"].includes(paymentStatus)
-  ) {
-    return { status: "error", message: "Choose a valid payment status." };
-  }
-
-  const order = await prisma.order.findUnique({
-    where: { id },
-    include: { items: true },
-  });
-  if (!order) return { status: "error", message: "Order not found." };
-
-  await prisma.$transaction(async (tx) => {
-    await tx.order.update({
-      where: { id },
-      data: { status, paymentStatus },
-    });
-
-    if (status === "CANCELLED" && order.status !== "CANCELLED") {
-      for (const item of order.items) {
-        if (!item.productId) continue;
-        await tx.product.updateMany({
-          where: { id: item.productId },
-          data: {
-            stock: { increment: item.quantity },
-            ...(await tx.product
-              .findUnique({ where: { id: item.productId }, select: { status: true } })
-              .then((product) =>
-                product?.status === "OUT_OF_STOCK"
-                  ? { status: "AVAILABLE" }
-                  : {},
-              )),
-          },
-        });
-      }
-    }
-  });
-
-  revalidatePath(`/admin/orders/${id}`);
-  revalidatePath("/admin/orders");
-  revalidatePath("/account/orders");
-  revalidatePath(`/order/${order.orderNumber}`);
-
-  return { status: "success", message: "Order updated." };
-}
 
 export async function markMessageHandledAction(formData: FormData) {
   if (!(await isAdminUser())) redirect("/login?next=/admin");

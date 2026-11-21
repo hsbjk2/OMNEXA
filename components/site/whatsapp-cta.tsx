@@ -8,10 +8,10 @@ export function WhatsAppCta({ whatsapp }: { whatsapp: string }) {
   const pathname = usePathname();
   const href = buildWhatsAppHref(
     whatsapp,
-    "Hi OMNEXA! I would like to place an order and get further details.",
+    "Hi OMNEXA! I would like to enquire about your products and get further details.",
   );
   if (!href) return null;
-  if (pathname.startsWith("/checkout") || pathname.startsWith("/order/")) {
+  if (pathname.startsWith("/order-request")) {
     return null;
   }
 

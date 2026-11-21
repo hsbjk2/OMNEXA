@@ -8,11 +8,11 @@ import { formatPrice } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Shipping policy",
   description:
-    "Shipping charges, checkout address rules and the current dispatch limits of the OMNEXA demonstration storefront.",
+    "How OMNEXA estimates delivery charges and how delivery is confirmed directly on WhatsApp.",
   openGraph: {
     title: "Shipping policy — OMNEXA",
     description:
-      "How shipping is priced at checkout, and what the demo store does and does not do about dispatch.",
+      "Delivery estimates, WhatsApp confirmation and the current dispatch position of the OMNEXA storefront.",
   },
 };
 
@@ -24,107 +24,107 @@ export default async function ShippingPolicyPage() {
     <PolicyPage
       title="Shipping"
       eyebrow="Policies"
-      intro="How shipping is calculated, what the checkout records and the honest limits of delivery in this demonstration."
+      intro="How delivery is estimated, what happens when you send a WhatsApp enquiry, and the honest limits of delivery in this demonstration storefront."
       currentHref="/policies/shipping"
       settings={settings}
       notice={
         <>
-          <strong className="font-semibold">Demo orders are not dispatched.</strong>{" "}
-          The storefront calculates shipping and records an address correctly,
-          but no courier is booked and no money changes hands. Dispatch service
-          levels, serviceable PIN codes and courier partners have not been
-          supplied and are not invented here.
+          <strong className="font-semibold">
+            No payment is collected on this website.
+          </strong>{" "}
+          Delivery charges shown here are estimates. OMNEXA confirms the final
+          delivery charge, serviceability and payment arrangements with you
+          directly on WhatsApp before anything is dispatched.
         </>
       }
       sections={[
         {
           heading: "The short version",
           body: (
-            <>
-              <ul>
-                <li>
-                  A flat {formatPrice(shipping.rate)} shipping charge applies to
-                  product subtotals below {formatPrice(shipping.threshold)}.
-                </li>
-                <li>
-                  Shipping is free when the product subtotal reaches{" "}
-                  {formatPrice(shipping.threshold)} or more.
-                </li>
-                <li>
-                  Shipping is recalculated on the server at checkout, not trusted
-                  from the browser.
-                </li>
-                <li>
-                  Orders are completed on WhatsApp, where the seller confirms
-                  the payment options.
-                </li>
-                <li>
-                  This is a demonstration store: orders are recorded and can be
-                  managed, but they are not picked, packed or shipped.
-                </li>
-              </ul>
-            </>
+            <ul>
+              <li>
+                A flat {formatPrice(shipping.rate)} delivery estimate applies to
+                product subtotals below {formatPrice(shipping.threshold)}.
+              </li>
+              <li>
+                Delivery is estimated as complimentary when the product subtotal
+                reaches {formatPrice(shipping.threshold)} or more.
+              </li>
+              <li>
+                The estimate is calculated on the server from the current
+                catalogue and store settings, not from prices typed into the
+                browser.
+              </li>
+              <li>
+                The final delivery charge is confirmed by OMNEXA on WhatsApp and
+                may differ for your address.
+              </li>
+              <li>
+                This is a demonstration storefront. No order is created on the
+                website and no parcel is dispatched by the website.
+              </li>
+            </ul>
           ),
         },
         {
-          heading: "Where the checkout delivers",
+          heading: "How the delivery estimate is calculated",
           body: (
             <>
               <p>
-                The address form collects a full name, phone number, address
-                lines, city, state and PIN code — the fields used for an Indian
-                delivery address. Prices are shown in Indian rupees and the
-                order records the address exactly as entered.
+                When you prepare a WhatsApp enquiry, the product subtotal is
+                added up from the current catalogue prices. If it is below{" "}
+                {formatPrice(shipping.threshold)}, the configured flat estimate
+                of {formatPrice(shipping.rate)} is added. At or above the
+                threshold, the estimate shows complimentary delivery.
               </p>
               <p>
-                The demo does not maintain a serviceability list, courier
-                coverage map or restricted-PIN-code rules. Every address that
-                passes form validation can complete a demo order. A live store
-                must define where it actually delivers before accepting real
-                orders.
-              </p>
-            </>
-          ),
-        },
-        {
-          heading: "How shipping is charged",
-          body: (
-            <>
-              <p>
-                The product subtotal is added up from the current catalogue
-                prices. If it is below {formatPrice(shipping.threshold)}, the
-                configured flat charge of {formatPrice(shipping.rate)} is added.
-                At or above the threshold, shipping is zero. The order total is
-                product subtotal plus shipping.
-              </p>
-              <p>
-                These figures are configuration, not marketing promises. The
-                operator can change them through the shipping environment
-                settings. The amount confirmed at checkout is the amount stored
-                with the order. There is no tax configuration in this demo, so
-                no tax line is added. See{" "}
-                <Link href="/policies/terms">terms</Link> for the pricing
-                caveat.
+                These figures are store configuration, not a final quotation.
+                They can change, and the seller may confirm a different amount
+                for your PIN code, order size or delivery requirement. The
+                amount confirmed in your WhatsApp conversation is the amount that
+                applies.
               </p>
             </>
           ),
         },
         {
-          heading: "Ordering and payment on WhatsApp",
+          heading: "Where OMNEXA delivers",
           body: (
             <>
               <p>
-                Orders are completed in a WhatsApp conversation with the store.
-                Checkout saves your order and opens WhatsApp with the items,
-                total and delivery address already written out. The seller
-                reviews the message and replies with the available payment
-                options.
+                The enquiry form asks for a full name, mobile number, complete
+                address, city, state and PIN code — the details needed to
+                discuss an Indian delivery. These details are placed into the
+                WhatsApp message that you choose to send; they are not submitted
+                to a courier from this website.
               </p>
               <p>
-                No card, UPI or bank details are collected on this website, and
-                no payment gateway is connected. Payment is arranged directly
-                with the seller in the chat. Your order is packed and dispatched
-                after the seller confirms payment.
+                The storefront does not maintain a public serviceability list or
+                courier coverage map. Please share your PIN code in the WhatsApp
+                conversation so the seller can confirm whether delivery is
+                available. A live store should publish its real serviceable
+                areas before accepting purchases.
+              </p>
+            </>
+          ),
+        },
+        {
+          heading: "How the WhatsApp enquiry works",
+          body: (
+            <>
+              <p>
+                From a product page or your bag, OMNEXA prepares a WhatsApp
+                message containing the products, variants, quantities, unit
+                prices, estimated total and your delivery details. You review
+                and send that message yourself. The website does not send the
+                message, create an order or reserve stock.
+              </p>
+              <p>
+                The seller replies with availability, the final delivery charge
+                and the payment arrangements. Nothing is charged on this
+                website, and the conversation is an enquiry until the seller
+                confirms the details. See{" "}
+                <Link href="/policies/terms">terms</Link> for the full position.
               </p>
             </>
           ),
@@ -134,38 +134,15 @@ export default async function ShippingPolicyPage() {
           body: (
             <>
               <p>
-                No dispatch cut-off, processing time, holiday schedule,
-                delivery estimate or courier partner has been defined for this
-                build, so none is displayed. Order statuses — pending, confirmed,
-                packed, shipped, delivered and cancelled — exist so the admin can
-                demonstrate the order lifecycle; a status change is not evidence
-                that a parcel has moved.
+                No dispatch cut-off, processing window, courier partner or
+                guaranteed delivery date has been defined for this build, so
+                none is displayed. The seller will share the current estimate in
+                your WhatsApp conversation.
               </p>
               <p>
-                Before launch, this page should state the real processing
-                window, expected delivery range, courier partners, tracking
-                method and what happens when delivery fails or an address is
-                incomplete.
-              </p>
-            </>
-          ),
-        },
-        {
-          heading: "Tracking an order",
-          body: (
-            <>
-              <p>
-                A confirmation page is available immediately after checkout at a
-                private link containing an unguessable access token. Signed-in
-                customers can also see their orders under{" "}
-                <Link href="/account/orders">account orders</Link>. The order
-                page shows the recorded address, items, totals and current
-                status.
-              </p>
-              <p>
-                There is no live courier tracking integration. If you lose the
-                confirmation link, sign in with the account used at checkout or
-                contact the store with the order number.
+                Before launch, this page should state the real processing window,
+                expected delivery range, courier partners, tracking method and
+                what happens when delivery fails or an address is incomplete.
               </p>
             </>
           ),
@@ -175,41 +152,39 @@ export default async function ShippingPolicyPage() {
           body: (
             <>
               <p>
-                Please enter a complete, accurate address and a reachable phone
-                number. The store records what you submit and cannot verify it
-                against a postal database. If you notice a mistake after placing
-                an order, contact the store immediately; in this demo an admin
-                may be able to correct the record before it is reset, but there
-                is no guarantee once an order has moved beyond pending or
-                confirmed.
+                Please enter a complete, accurate address and a reachable mobile
+                number. OMNEXA cannot verify the address against a postal
+                database. If you notice a mistake, correct it before sending the
+                WhatsApp message, or tell the seller in the chat as soon as
+                possible.
               </p>
               <p>
-                Saved addresses can be managed from{" "}
+                Signed-in customers can save delivery details from{" "}
                 <Link href="/account/addresses">your address book</Link> and
-                reused at checkout.
+                reuse them the next time you prepare an enquiry.
               </p>
             </>
           ),
         },
         {
-          heading: "Damaged, delayed or missing orders",
+          heading: "Damaged, delayed or missing items",
           body: (
             <>
               <p>
-                This demo cannot experience a real transit delay, loss or
-                damage. When the store begins dispatching, this section should
-                explain how to report a problem, the evidence needed (such as
-                unboxing photographs and the order number), the response window
-                and whether a replacement or refund is offered.
+                Because purchases are arranged directly with the seller, any
+                delivery problem should be raised in the same WhatsApp
+                conversation. Include your order details, a description of the
+                problem and photographs where possible.
               </p>
               <p>
-                For now, if something about a demo order looks wrong, write to{" "}
+                The final replacement, refund and return position has not yet
+                been published. See the{" "}
+                <Link href="/policies/returns">return policy</Link> for the
+                current position, or write to{" "}
                 <a href={`mailto:${settings.contactEmail}`}>
                   {settings.contactEmail}
-                </a>{" "}
-                with the order number. See the{" "}
-                <Link href="/policies/returns">return policy</Link> for the
-                current cancellation position.
+                </a>
+                .
               </p>
             </>
           ),
@@ -218,13 +193,13 @@ export default async function ShippingPolicyPage() {
           heading: "Contact",
           body: (
             <p>
-              Shipping questions can be sent to{" "}
+              Delivery questions can be sent to{" "}
               <a href={`mailto:${settings.contactEmail}`}>
                 {settings.contactEmail}
               </a>{" "}
               or through the <Link href="/contact">contact page</Link>. This
-              policy is dated 18 November 2026 and will be completed before the
-              store accepts real orders.
+              policy is a working draft for the demonstration storefront and
+              will be completed before the store accepts live purchases.
             </p>
           ),
         },

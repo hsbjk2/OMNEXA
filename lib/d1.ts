@@ -33,6 +33,10 @@ const COLUMN_MIGRATIONS: Record<
   string,
   { name: string; definition: string }[]
 > = {
+  Product: [
+    { name: "amazonUrl", definition: `"amazonUrl" TEXT` },
+    { name: "flipkartUrl", definition: `"flipkartUrl" TEXT` },
+  ],
   SiteSettings: [
     {
       name: "googleBusinessUrl",
@@ -44,6 +48,18 @@ const COLUMN_MIGRATIONS: Record<
     },
   ],
 };
+
+// Prisma's local SQLite connector stores DateTime values as integer
+// milliseconds, while the D1 driver adapter writes and expects ISO-8601 text
+// (for example 2026-11-18T12:19:47.112+00:00). Databases seeded from
+// prisma/dev.db before this migration contain the integer form and make every
+// DateTime read fail with "Inconsistent column data". This migration converts
+// those values in place, without touching any other column or row.
+const DATETIME_MIGRATION_ID = "datetime-iso-v1";
+
+function quoteIdentifier(identifier: string) {
+  return `"${identifier.replace(/"/g, '""')}"`;
+}
 
 async function runStatements(db: D1Database, statements: string[]) {
   for (const statement of statements) {
@@ -68,32 +84,193 @@ async function applyColumnMigrations(db: D1Database) {
   }
 }
 
-async function initializeDatabase(db: D1Database) {
+type DateTimeColumn = { table: string; column: string };
+
+/**
+ * Finds every DATETIME/DATE/TIMESTAMP column in the live D1 schema, including
+ * legacy tables that are no longer part of the Prisma schema.
+ */
+async function listDateTimeColumns(db: D1Database): Promise<DateTimeColumn[]> {
+  const { results: tables } = await db
+    .prepare(
+      `SELECT "name" FROM "sqlite_master"
+       WHERE "type" = 'table'
+         AND "name" NOT LIKE 'sqlite_%'
+         AND "name" NOT LIKE '_cf_%'
+         AND "name" NOT LIKE '_freebuff_%'
+       ORDER BY "name"`,
+    )
+    .all<{ name: string }>();
+
+  const columns: DateTimeColumn[] = [];
+  for (const table of tables) {
+    const { results } = await db
+      .prepare(`PRAGMA table_info(${quoteIdentifier(table.name)})`)
+      .all<{ name: string; type: string }>();
+
+    for (const column of results) {
+      if (/^(datetime|date|timestamp)$/i.test((column.type || "").trim())) {
+        columns.push({ table: table.name, column: column.name });
+      }
+    }
+  }
+
+  return columns;
+}
+
+function numericDateTimeUpdate(table: string, column: string) {
+  const t = quoteIdentifier(table);
+  const c = quoteIdentifier(column);
+  const numeric = `CAST(${c} AS REAL)`;
+
+  // Values >= 1e11 are Unix milliseconds; smaller values in the supported
+  // range are Unix seconds. The range guard keeps invalid numbers untouched
+  // instead of converting them to NULL.
+  return `
+    UPDATE ${t}
+    SET ${c} = CASE
+      WHEN ABS(${numeric}) >= 100000000000
+        THEN strftime('%Y-%m-%dT%H:%M:%f+00:00', ${numeric} / 1000.0, 'unixepoch')
+      ELSE strftime('%Y-%m-%dT%H:%M:%f+00:00', ${numeric}, 'unixepoch')
+    END
+    WHERE (
+      typeof(${c}) IN ('integer', 'real')
+      OR (
+        typeof(${c}) = 'text'
+        AND ${c} GLOB '[0-9]*'
+        AND ${c} NOT GLOB '*[^0-9.]*'
+      )
+    )
+    AND ABS(${numeric}) BETWEEN 1000000000 AND 9999999999999
+  `;
+}
+
+function sqliteTextDateTimeUpdate(table: string, column: string) {
+  const t = quoteIdentifier(table);
+  const c = quoteIdentifier(column);
+
+  // SQLite's CURRENT_TIMESTAMP default produces "YYYY-MM-DD HH:MM:SS" (UTC).
+  // Normalise it to the same ISO-8601 shape the Prisma D1 adapter writes.
+  // `datetime(c) = c` is a cheap validity check that avoids the long GLOB
+  // patterns D1 rejects as too complex.
+  return `
+    UPDATE ${t}
+    SET ${c} = replace(${c}, ' ', 'T') || '.000+00:00'
+    WHERE typeof(${c}) = 'text'
+      AND length(${c}) = 19
+      AND datetime(${c}) = ${c}
+  `;
+}
+
+async function repairDateTimeValues(db: D1Database) {
+  const columns = await listDateTimeColumns(db);
+  let repaired = 0;
+
+  for (const { table, column } of columns) {
+    const numeric = await db
+      .prepare(numericDateTimeUpdate(table, column))
+      .run();
+    const numericChanges = numeric.meta?.changes ?? 0;
+    if (numericChanges > 0) {
+      repaired += numericChanges;
+      console.warn(
+        `[db] D1 repaired ${numericChanges} numeric DateTime value(s) in ${table}.${column}`,
+      );
+    }
+
+    const sqliteText = await db
+      .prepare(sqliteTextDateTimeUpdate(table, column))
+      .run();
+    const sqliteTextChanges = sqliteText.meta?.changes ?? 0;
+    if (sqliteTextChanges > 0) {
+      repaired += sqliteTextChanges;
+      console.warn(
+        `[db] D1 normalised ${sqliteTextChanges} SQLite DateTime value(s) in ${table}.${column}`,
+      );
+    }
+  }
+
+  return repaired;
+}
+
+async function applyDataMigrations(db: D1Database) {
   await db
     .prepare(
-      'CREATE TABLE IF NOT EXISTS "_freebuff_seed" ("id" INTEGER NOT NULL PRIMARY KEY)',
+      'CREATE TABLE IF NOT EXISTS "_freebuff_migrations" ("id" TEXT NOT NULL PRIMARY KEY, "appliedAt" TEXT NOT NULL)',
     )
     .run();
 
-  const marker = await db
-    .prepare('SELECT "id" FROM "_freebuff_seed" WHERE "id" = 1')
+  const applied = await db
+    .prepare('SELECT "id" FROM "_freebuff_migrations" WHERE "id" = ?')
+    .bind(DATETIME_MIGRATION_ID)
     .first();
 
-  if (marker) {
-    await applyColumnMigrations(db);
-    return;
-  }
+  if (applied) return;
 
-  // D1 starts empty; create the Prisma schema and copy the public catalogue.
-  await runStatements(db, D1_SCHEMA_STATEMENTS);
-  await applyColumnMigrations(db);
-  await runStatements(db, D1_SEED_STATEMENTS);
-  await db.prepare('INSERT OR IGNORE INTO "_freebuff_seed" ("id") VALUES (1)').run();
+  const repaired = await repairDateTimeValues(db);
+
+  await db
+    .prepare(
+      'INSERT OR IGNORE INTO "_freebuff_migrations" ("id", "appliedAt") VALUES (?, ?)',
+    )
+    .bind(
+      DATETIME_MIGRATION_ID,
+      new Date().toISOString().replace("Z", "+00:00"),
+    )
+    .run();
+
+  if (repaired > 0) {
+    console.warn(
+      `[db] D1 migration "${DATETIME_MIGRATION_ID}" repaired ${repaired} DateTime value(s).`,
+    );
+  }
+}
+
+async function initializeDatabase(db: D1Database) {
+  let step = "create seed marker";
+
+  try {
+    await db
+      .prepare(
+        'CREATE TABLE IF NOT EXISTS "_freebuff_seed" ("id" INTEGER NOT NULL PRIMARY KEY)',
+      )
+      .run();
+
+    step = "read seed marker";
+    const marker = await db
+      .prepare('SELECT "id" FROM "_freebuff_seed" WHERE "id" = 1')
+      .first();
+
+    if (marker) {
+      step = "apply column migrations";
+      await applyColumnMigrations(db);
+      step = "repair DateTime values";
+      await applyDataMigrations(db);
+      return;
+    }
+
+    // D1 starts empty; create the Prisma schema and copy the public catalogue.
+    step = "create schema";
+    await runStatements(db, D1_SCHEMA_STATEMENTS);
+    step = "apply column migrations";
+    await applyColumnMigrations(db);
+    step = "seed public catalogue";
+    await runStatements(db, D1_SEED_STATEMENTS);
+    step = "repair DateTime values";
+    await applyDataMigrations(db);
+    step = "write seed marker";
+    await db
+      .prepare('INSERT OR IGNORE INTO "_freebuff_seed" ("id") VALUES (1)')
+      .run();
+  } catch (error) {
+    console.error(`[db] D1 initialization failed during "${step}"`, error);
+    throw error;
+  }
 }
 
 /**
- * Creates and seeds the D1 schema once per Worker isolate. Safe to call on
- * every request: the work is memoised and the SQL is idempotent.
+ * Creates, migrates and repairs the D1 schema once per Worker isolate. Safe to
+ * call on every request: the work is memoised and the SQL is idempotent.
  */
 export async function ensureDatabase(): Promise<void> {
   const db = getCloudflareEnv()?.DB;

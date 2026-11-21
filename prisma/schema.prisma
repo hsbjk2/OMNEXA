@@ -20,7 +20,6 @@ model User {
   updatedAt        DateTime            @updatedAt
   sessions         Session[]
   addresses        Address[]
-  orders           Order[]
   cartItems        CartItem[]
   wishlist         WishlistItem[]
   searchHistory    SearchHistory[]
@@ -106,6 +105,8 @@ model Product {
   isDemo           Boolean        @default(false)
   variantLabel     String?
   variantOptions   String?
+  amazonUrl        String?
+  flipkartUrl      String?
   viewCount        Int            @default(0)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -113,7 +114,6 @@ model Product {
   wishlistItems    WishlistItem[]
   recentlyViewed   RecentlyViewed[]
   waitlistEntries  WaitlistEntry[]
-  orderItems       OrderItem[]
 
   @@index([categoryId])
   @@index([status, isPublished])
@@ -167,47 +167,6 @@ model RecentlyViewed {
 
   @@unique([userId, productId])
   @@index([userId, viewedAt])
-}
-
-model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
-  userId          String?
-  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  customerName    String
-  email           String
-  phone           String
-  shippingAddress String
-  subtotal        Int
-  shipping        Int
-  total           Int
-  paymentMethod   String      @default("WHATSAPP")
-  paymentStatus   String      @default("PENDING")
-  status          String      @default("PENDING")
-  accessToken     String      @unique
-  notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  items           OrderItem[]
-
-  @@index([userId, createdAt])
-  @@index([status])
-}
-
-model OrderItem {
-  id          String   @id @default(cuid())
-  orderId     String
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId   String?
-  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-  productName String
-  variant     String   @default("")
-  sku         String
-  price       Int
-  quantity    Int
-  image       String
-
-  @@index([orderId])
 }
 
 model NewsletterSubscriber {

@@ -10,12 +10,3 @@ export type AccountAddress = {
   pincode: string;
   isDefault: boolean;
 };
-
-export type AccountOrderItem = {
-  id: string;
-  productName: string;
-  variant: string;
-  image: string;
-  quantity: number;
-  price: number;
-};

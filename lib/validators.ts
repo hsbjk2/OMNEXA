@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidHttpUrl } from "@/lib/utils";
 
 const email = z
   .string()
@@ -99,23 +100,22 @@ export const addressSchema = z.object({
   isDefault: z.boolean().optional().default(false),
 });
 
-export const checkoutSchema = z.object({
+export const orderRequestSchema = z.object({
   customerName: z
     .string()
     .trim()
     .min(2, "Enter the recipient's full name.")
     .max(80, "Use 80 characters or fewer."),
-  email,
   phone: z
     .string()
     .trim()
-    .min(7, "Enter a valid phone number.")
+    .min(10, "Enter a valid mobile number.")
     .max(20, "Use 20 characters or fewer.")
     .regex(/^[+0-9()\-\s]+$/, "Use digits and standard phone symbols only."),
   line1: z
     .string()
     .trim()
-    .min(4, "Enter the street address.")
+    .min(4, "Enter the delivery address.")
     .max(120, "Use 120 characters or fewer."),
   line2: z.string().trim().max(120, "Use 120 characters or fewer.").optional(),
   city: z.string().trim().min(2, "Enter the city.").max(60),
@@ -136,7 +136,19 @@ export const checkoutSchema = z.object({
     .min(1, "Your bag is empty.")
     .max(50),
   saveAddress: z.boolean().optional().default(false),
+  acknowledgement: z.boolean().optional().default(false),
 });
+
+const optionalMarketplaceUrl = z
+  .string()
+  .trim()
+  .max(500, "Use 500 characters or fewer.")
+  .optional()
+  .or(z.literal(""))
+  .refine(
+    (value) => !value || isValidHttpUrl(value),
+    "Enter a complete URL beginning with https://",
+  );
 
 export const newsletterSchema = z.object({
   email,
@@ -201,6 +213,8 @@ export const productAdminSchema = z.object({
   isDemo: z.boolean().default(false),
   variantLabel: z.string().trim().max(40).optional(),
   variantOptions: z.string().trim().max(400).optional(),
+  amazonUrl: optionalMarketplaceUrl,
+  flipkartUrl: optionalMarketplaceUrl,
 });
 
 export const categoryAdminSchema = z.object({

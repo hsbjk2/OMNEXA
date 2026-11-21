@@ -49,7 +49,13 @@ export const getSiteSettings = cache(async (): Promise<StoreSettings> => {
   let record = null;
   try {
     record = await prisma.siteSettings.findUnique({ where: { id: "site" } });
-  } catch {
+  } catch (error) {
+    // Keep the storefront usable with defaults, but never hide the database
+    // error from the server logs.
+    console.error(
+      "[db] Could not read SiteSettings; falling back to defaults.",
+      error,
+    );
     record = null;
   }
 

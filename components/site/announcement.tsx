@@ -24,7 +24,7 @@ export function Announcement({ threshold }: { threshold: number }) {
       <div className="container-page flex min-h-9 items-center justify-center gap-2 py-2 pr-8 text-center">
         <Sparkles className="hidden size-3 shrink-0 text-lime sm:block" strokeWidth={1.8} />
         <p className="text-[0.6rem] font-medium uppercase leading-relaxed tracking-[0.15em] text-white/75 sm:text-[0.64rem]">
-          Complimentary shipping on orders over{" "}
+          Complimentary shipping on bags over{" "}
           <span className="text-lime">{formatPrice(threshold)}</span>
           <span className="mx-2 hidden text-white/25 sm:inline">/</span>
           <span className="hidden sm:inline">Order on WhatsApp</span>

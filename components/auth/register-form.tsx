@@ -77,8 +77,8 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
         <span className="italic text-forest/65">yours.</span>
       </h1>
       <p className="mt-4 text-[0.88rem] leading-relaxed text-muted">
-        Create an account for a faster checkout, saved addresses, a persistent
-        wishlist and order history.
+        Create an account for saved delivery addresses, a persistent bag,
+        wishlist, recently viewed products and search history.
       </p>
 
       {state.status === "error" && state.message && (

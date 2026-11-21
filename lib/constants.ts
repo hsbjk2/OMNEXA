@@ -20,43 +20,6 @@ export const POLICY_LINKS = [
   { label: "Return Policy", href: "/policies/returns" },
 ] as const;
 
-export const ORDER_STATUSES = [
-  "PENDING",
-  "CONFIRMED",
-  "PACKED",
-  "SHIPPED",
-  "DELIVERED",
-  "CANCELLED",
-] as const;
-
-export type OrderStatus = (typeof ORDER_STATUSES)[number];
-
-export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  PACKED: "Packed",
-  SHIPPED: "Shipped",
-  DELIVERED: "Delivered",
-  CANCELLED: "Cancelled",
-};
-
-export const PAYMENT_STATUSES = ["PENDING", "PAID", "REFUNDED"] as const;
-export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
-
-export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  PENDING: "Pending",
-  PAID: "Paid",
-  REFUNDED: "Refunded",
-};
-
-export const PAYMENT_METHODS = ["WHATSAPP", "COD"] as const;
-export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
-
-export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  WHATSAPP: "WhatsApp order",
-  COD: "Cash on delivery",
-};
-
 export const PRODUCT_STATUSES = ["AVAILABLE", "OUT_OF_STOCK", "COMING_SOON"] as const;
 export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
 
@@ -83,15 +46,6 @@ export const SORT_VALUES = ["popular", "newest", "price-asc", "price-desc"] as c
 
 export const DEFAULT_SHIPPING_RATE = 79;
 export const DEFAULT_FREE_SHIPPING_THRESHOLD = 1499;
-
-export function shippingForSubtotal(
-  subtotal: number,
-  rate = DEFAULT_SHIPPING_RATE,
-  threshold = DEFAULT_FREE_SHIPPING_THRESHOLD,
-) {
-  if (subtotal <= 0) return 0;
-  return subtotal >= threshold ? 0 : rate;
-}
 
 export const AUTH_COOKIE = "omnexa_session";
 export const OAUTH_STATE_COOKIE = "omnexa_oauth_state";

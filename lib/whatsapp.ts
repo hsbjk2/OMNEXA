@@ -1,5 +1,4 @@
 import { formatPrice } from "@/lib/utils";
-import { parseOrderAddress } from "@/lib/orders";
 
 /**
  * Normalises an Indian phone number into the international digits that wa.me
@@ -17,96 +16,168 @@ export function whatsAppDigits(raw: string) {
   return digits;
 }
 
+export function isWhatsAppConfigured(raw: string) {
+  return whatsAppDigits(raw).length >= 10;
+}
+
 export function buildWhatsAppHref(rawNumber: string, message: string) {
   const digits = whatsAppDigits(rawNumber);
   if (digits.length < 10) return null;
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
 
-export type WhatsAppOrder = {
-  orderNumber: string;
+export const WHATSAPP_ENQUIRY_NOTE =
+  "This is an enquiry, not a confirmed order. Availability, delivery charges, the final total and payment arrangements are confirmed by OMNEXA on WhatsApp.";
+
+export type WhatsAppEnquiryItem = {
+  name: string;
+  variant?: string | null;
+  quantity: number;
+  unitPrice: number;
+  productUrl: string;
+  imageUrl?: string | null;
+};
+
+export type WhatsAppProductEnquiry = {
+  name: string;
+  variant?: string | null;
+  quantity: number;
+  price: number | null;
+  productUrl: string;
+  imageUrl?: string | null;
+};
+
+export type WhatsAppCartEnquiry = {
   customerName: string;
   phone: string;
-  email: string;
-  shippingAddress: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  notes?: string | null;
+  items: WhatsAppEnquiryItem[];
   subtotal: number;
   shipping: number;
   total: number;
-  notes?: string | null;
-  items: Array<{
-    productName: string;
-    variant?: string | null;
-    quantity: number;
-    price: number;
-  }>;
 };
 
-export function buildOrderWhatsAppMessage(order: WhatsAppOrder) {
-  const address = parseOrderAddress(order.shippingAddress);
-  const addressLines = [
-    address.line1,
-    address.line2,
-    [address.city, address.state, address.pincode].filter(Boolean).join(" "),
-  ].filter(Boolean);
-
-  const itemLines = order.items.map(
-    (item) =>
-      `• ${item.productName}${item.variant ? ` (${item.variant})` : ""} × ${
-        item.quantity
-      } — ${formatPrice(item.price * item.quantity)}`,
-  );
-
+export function buildProductEnquiryMessage(product: WhatsAppProductEnquiry) {
   const lines = [
-    "Hello OMNEXA! I would like to place this order:",
+    "Hello OMNEXA Team!",
     "",
-    `Order: ${order.orderNumber}`,
+    "I am interested in purchasing this product:",
     "",
-    "Items:",
-    ...itemLines,
-    "",
-    `Subtotal: ${formatPrice(order.subtotal)}`,
-    `Delivery: ${
-      order.shipping === 0 ? "Complimentary" : formatPrice(order.shipping)
-    }`,
-    `Total: ${formatPrice(order.total)}`,
-    "",
-    `Name: ${order.customerName}`,
-    `Phone: ${order.phone}`,
-    `Email: ${order.email}`,
-    "",
-    "Deliver to:",
-    ...addressLines,
+    `Product: ${product.name}`,
   ];
 
-  if (order.notes) {
-    lines.push("", `Notes: ${order.notes}`);
+  if (product.variant) {
+    lines.push(`Variant: ${product.variant}`);
+  }
+
+  lines.push(`Quantity: ${product.quantity}`);
+
+  if (product.price !== null && product.price > 0) {
+    lines.push(
+      `Price: ${formatPrice(product.price)} each`,
+      `Estimated total: ${formatPrice(product.price * product.quantity)}`,
+    );
+  } else {
+    lines.push("Price: To be confirmed by the seller");
+  }
+
+  lines.push(`Product link: ${product.productUrl}`);
+
+  if (product.imageUrl) {
+    lines.push(`Image: ${product.imageUrl}`);
   }
 
   lines.push(
     "",
-    "Please share the payment options so I can complete this order.",
+    "Please share availability, delivery charges and payment details.",
+    "",
+    WHATSAPP_ENQUIRY_NOTE,
   );
 
   return lines.join("\n");
 }
 
-export function buildOrderWhatsAppHref(
-  order: WhatsAppOrder,
+export function buildProductEnquiryHref(
   rawNumber: string,
+  product: WhatsAppProductEnquiry,
 ) {
-  return buildWhatsAppHref(rawNumber, buildOrderWhatsAppMessage(order));
+  return buildWhatsAppHref(rawNumber, buildProductEnquiryMessage(product));
 }
 
-export function buildCustomerChatHref(
-  rawNumber: string,
-  customerName: string,
-  orderNumber: string,
-  total: number,
-) {
-  return buildWhatsAppHref(
-    rawNumber,
-    `Hello ${customerName}, thank you for your OMNEXA order ${orderNumber} (${formatPrice(
-      total,
-    )}). Here are the payment options:`,
+export function buildCartEnquiryMessage(enquiry: WhatsAppCartEnquiry) {
+  const itemLines = enquiry.items.flatMap((item, index) => {
+    const lines = [
+      `${index + 1}. ${item.name}`,
+      `   Quantity: ${item.quantity}`,
+    ];
+
+    if (item.variant) {
+      lines.push(`   Variant: ${item.variant}`);
+    }
+
+    lines.push(
+      `   Unit price: ${formatPrice(item.unitPrice)}`,
+      `   Line total: ${formatPrice(item.unitPrice * item.quantity)}`,
+      `   Product: ${item.productUrl}`,
+    );
+
+    if (item.imageUrl) {
+      lines.push(`   Image: ${item.imageUrl}`);
+    }
+
+    return lines;
+  });
+
+  const addressLines = [
+    enquiry.line1,
+    enquiry.line2,
+    [enquiry.city, enquiry.state, enquiry.pincode].filter(Boolean).join(", "),
+  ].filter(Boolean);
+
+  const lines = [
+    "Hello OMNEXA Team!",
+    "",
+    "I would like to enquire about these products:",
+    "",
+    ...itemLines,
+    "",
+    `Estimated product value: ${formatPrice(enquiry.subtotal)}`,
+    `Estimated delivery: ${
+      enquiry.shipping === 0
+        ? "Complimentary (to be confirmed)"
+        : formatPrice(enquiry.shipping)
+    }`,
+    `Estimated total: ${formatPrice(enquiry.total)}`,
+    "",
+    "Delivery details:",
+    `Name: ${enquiry.customerName}`,
+    `Mobile: ${enquiry.phone}`,
+    "Address:",
+    ...addressLines,
+  ];
+
+  if (enquiry.notes) {
+    lines.push(`Delivery notes: ${enquiry.notes}`);
+  }
+
+  lines.push(
+    "",
+    "Please confirm availability, delivery charges and payment arrangements.",
+    "",
+    WHATSAPP_ENQUIRY_NOTE,
   );
+
+  return lines.join("\n");
+}
+
+export function buildCartEnquiryHref(
+  rawNumber: string,
+  enquiry: WhatsAppCartEnquiry,
+) {
+  return buildWhatsAppHref(rawNumber, buildCartEnquiryMessage(enquiry));
 }

@@ -54,6 +54,8 @@ export default async function AdminEditProductPage({
         isDemo: product.isDemo,
         variantLabel: product.variantLabel ?? "",
         variantOptions: parseStringArray(product.variantOptions),
+        amazonUrl: product.amazonUrl ?? "",
+        flipkartUrl: product.flipkartUrl ?? "",
       }}
     />
   );

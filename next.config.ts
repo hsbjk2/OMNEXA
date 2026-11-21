@@ -13,6 +13,26 @@ if (
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["@prisma/client", ".prisma/client"],
+  async redirects() {
+    return [
+      { source: "/checkout", destination: "/order-request", permanent: false },
+      {
+        source: "/order/:path*",
+        destination: "/order-request",
+        permanent: false,
+      },
+      {
+        source: "/account/orders/:path*",
+        destination: "/account",
+        permanent: false,
+      },
+      {
+        source: "/admin/orders/:path*",
+        destination: "/admin",
+        permanent: false,
+      },
+    ];
+  },
   images: {
     // Next's server-side image optimiser needs native sharp, which workerd
     // cannot load. The catalogue images are already pre-sized WebP files.

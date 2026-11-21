@@ -66,7 +66,7 @@ export default async function HomePage() {
   const whatsappHref =
     buildWhatsAppHref(
       settings.whatsapp,
-      "Hi OMNEXA! I would like to place an order and get further details.",
+      "Hi OMNEXA! I would like to enquire about your products and get further details.",
     ) ?? "";
 
   const websiteSchema = {
@@ -166,7 +166,7 @@ export default async function HomePage() {
             {
               icon: PackageCheck,
               title: "Retail & wholesale",
-              body: "Single orders and business enquiries, side by side.",
+              body: "Retail purchases and business enquiries, side by side.",
               href: "/wholesale",
               link: "Wholesale enquiries",
             },
@@ -395,7 +395,7 @@ export default async function HomePage() {
                 <p className="text-[0.9rem] leading-relaxed text-muted">
                   The full edit, on the shelf — skincare, colour, kits and
                   jewellery. Come by the store, or message us on WhatsApp to
-                  place an order and ask for further details.
+                  ask about availability, delivery and the right piece for you.
                 </p>
                 <p className="mt-3 flex items-center gap-2 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-forest/45">
                   <MapPin className="size-3.5 text-bright" />

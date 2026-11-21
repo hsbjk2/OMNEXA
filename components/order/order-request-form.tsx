@@ -1,19 +1,22 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Check,
   Loader2,
-  Lock,
   MapPin,
-  ShieldCheck,
+  MessageCircle,
+  ShoppingBag,
 } from "lucide-react";
-import { placeOrderAction, type CheckoutState } from "@/app/actions/checkout";
+import {
+  prepareOrderEnquiryAction,
+  type OrderRequestState,
+} from "@/app/actions/order-request";
 import { useStore } from "@/components/providers/store-provider";
 import { WhatsAppIcon } from "@/components/site/social-icons";
 import { formatPrice } from "@/lib/utils";
@@ -31,15 +34,21 @@ type Address = {
   isDefault: boolean;
 };
 
-const initialState: CheckoutState = { status: "idle" };
+const initialState: OrderRequestState = { status: "idle" };
 
-export function CheckoutForm({ addresses }: { addresses: Address[] }) {
-  const router = useRouter();
-  const { cart, user, clearCart, shipping } = useStore();
+export function OrderRequestForm({
+  addresses,
+  whatsappConfigured,
+}: {
+  addresses: Address[];
+  whatsappConfigured: boolean;
+}) {
+  const { cart, user, shipping } = useStore();
   const [state, formAction, pending] = useActionState(
-    placeOrderAction,
+    prepareOrderEnquiryAction,
     initialState,
   );
+
   const defaultAddress =
     addresses.find((address) => address.isDefault) ?? addresses[0] ?? null;
   const [selectedAddress, setSelectedAddress] = useState<string | null>(
@@ -47,7 +56,6 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
   );
   const [details, setDetails] = useState({
     customerName: defaultAddress?.fullName || user?.name || "",
-    email: user?.email || "",
     phone: defaultAddress?.phone || user?.phone || "",
     line1: defaultAddress?.line1 || "",
     line2: defaultAddress?.line2 || "",
@@ -76,17 +84,6 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
     [cart],
   );
 
-  useEffect(() => {
-    if (state.status === "success" && state.order) {
-      clearCart();
-      router.replace(
-        `/order/${state.order.orderNumber}?token=${encodeURIComponent(
-          state.order.token,
-        )}&handoff=whatsapp`,
-      );
-    }
-  }, [state, clearCart, router]);
-
   function chooseAddress(address: Address) {
     setSelectedAddress(address.id);
     setDetails((current) => ({
@@ -106,35 +103,79 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
     if (key !== "notes") setSelectedAddress(null);
   }
 
-  if (cart.length === 0 && state.status !== "success") {
+  if (state.status === "success" && state.whatsappUrl) {
     return (
       <section className="bg-soft">
-        <div className="container-page py-20 text-center sm:py-28">
-          <p className="eyebrow text-forest/45">Checkout</p>
-          <h1 className="mt-4 font-display text-4xl">Your bag is empty.</h1>
-          <p className="mt-3 text-sm text-muted">
-            Add a piece before continuing to checkout.
+        <div className="container-page flex min-h-[60vh] flex-col items-center justify-center py-16 text-center sm:py-24">
+          <span className="flex size-16 items-center justify-center rounded-full bg-[#128c47] text-white">
+            <WhatsAppIcon className="size-7" />
+          </span>
+          <p className="eyebrow mt-6 text-forest/45">Your enquiry is ready</p>
+          <h1 className="mt-3 max-w-2xl font-display text-[clamp(2.6rem,5vw,4.4rem)] leading-[0.96] tracking-[-0.04em]">
+            One message away.
+          </h1>
+          <p className="mt-4 max-w-lg text-sm leading-relaxed text-muted">
+            WhatsApp will open with your products, delivery details and
+            estimated total already written out. Review the message and send it
+            to start the conversation with OMNEXA.
           </p>
-          <Link href="/shop" className="btn btn-forest mt-6">
-            Shop the collection <ArrowRight className="size-3.5" />
-          </Link>
+
+          {state.summary && (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border border-line bg-white px-6 py-4 text-sm">
+              <span className="text-muted">
+                {state.summary.itemCount}{" "}
+                {state.summary.itemCount === 1 ? "piece" : "pieces"}
+              </span>
+              <span className="text-muted">
+                Estimated total{" "}
+                <strong className="font-semibold text-ink">
+                  {formatPrice(state.summary.total)}
+                </strong>
+              </span>
+            </div>
+          )}
+
+          <a
+            href={state.whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-forest mt-7 h-12 px-7"
+          >
+            <WhatsAppIcon className="size-4" /> Open WhatsApp and send
+          </a>
+          <p className="mt-4 max-w-md text-[0.68rem] leading-relaxed text-muted/70">
+            Nothing has been charged or confirmed on this website. Your bag is
+            still saved. OMNEXA will confirm availability, delivery charges and
+            payment arrangements in the chat.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link href="/cart" className="btn btn-outline">
+              Back to bag
+            </Link>
+            <Link href="/shop" className="btn-quiet">
+              Continue shopping <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
         </div>
       </section>
     );
   }
 
-  if (state.status === "success") {
+  if (cart.length === 0) {
     return (
       <section className="bg-soft">
-        <div className="container-page flex min-h-[50vh] flex-col items-center justify-center py-20 text-center">
-          <span className="flex size-14 items-center justify-center rounded-full bg-light text-forest">
-            <Check className="size-6" />
+        <div className="container-page py-16 text-center sm:py-24">
+          <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-light text-forest">
+            <ShoppingBag className="size-6" strokeWidth={1.3} />
           </span>
-          <h1 className="mt-5 font-display text-4xl">Order saved.</h1>
-          <p className="mt-2 text-sm text-muted">
-            Preparing your WhatsApp message…
+          <p className="eyebrow mt-6 text-forest/45">WhatsApp enquiry</p>
+          <h1 className="mt-3 font-display text-4xl">Your bag is empty.</h1>
+          <p className="mt-3 text-sm text-muted">
+            Add a piece before preparing your WhatsApp message.
           </p>
-          <Loader2 className="mt-5 size-5 animate-spin text-forest/40" />
+          <Link href="/shop" className="btn btn-forest mt-6">
+            Shop the collection <ArrowRight className="size-3.5" />
+          </Link>
         </div>
       </section>
     );
@@ -152,13 +193,13 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
           </Link>
           <div className="mt-5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="eyebrow text-forest/45">Secure checkout</p>
+              <p className="eyebrow text-forest/45">Order via WhatsApp</p>
               <h1 className="mt-3 font-display text-[clamp(2.7rem,5vw,4.2rem)] leading-[0.96] tracking-[-0.04em]">
-                Almost yours.
+                Where should it go?
               </h1>
             </div>
             <p className="flex items-center gap-2 text-[0.64rem] uppercase tracking-[0.13em] text-forest/45">
-              <Lock className="size-3.5" /> Server-verified pricing
+              <MessageCircle className="size-3.5" /> No payment on this website
             </p>
           </div>
         </div>
@@ -172,6 +213,23 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
           <input type="hidden" name="items" value={itemsJson} />
 
           <div className="order-1 space-y-9">
+            {!whatsappConfigured && (
+              <div className="flex items-start gap-2.5 border border-[#d9c88f] bg-[#fbf6e6] px-4 py-3 text-[0.74rem] leading-relaxed text-[#5f5328]">
+                <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+                <p>
+                  WhatsApp ordering is not configured for this store yet. Add a
+                  business number in admin settings, or use the{" "}
+                  <Link
+                    href="/contact"
+                    className="font-semibold underline underline-offset-2"
+                  >
+                    contact page
+                  </Link>{" "}
+                  to reach the seller.
+                </p>
+              </div>
+            )}
+
             {state.status === "error" && state.message && (
               <div
                 className="border border-wine/25 bg-[#f7eaea] px-4 py-3 text-sm leading-relaxed text-wine"
@@ -183,16 +241,17 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
 
             {!user && (
               <div className="flex items-start gap-2.5 border border-line bg-white px-4 py-3 text-[0.72rem] leading-relaxed text-muted">
-                <Lock className="mt-0.5 size-3.5 shrink-0 text-forest/45" />
+                <MapPin className="mt-0.5 size-3.5 shrink-0 text-forest/45" />
                 <p>
                   Have an OMNEXA account?{" "}
                   <Link
-                    href="/login?next=%2Fcheckout"
+                    href="/login?next=%2Forder-request"
                     className="font-semibold text-forest underline underline-offset-2"
                   >
                     Sign in
                   </Link>{" "}
-                  to keep this order in your account, or continue as a guest.
+                  to use a saved address and keep your bag, wishlist and browsing
+                  history together. You can also continue as a guest.
                 </p>
               </div>
             )}
@@ -258,7 +317,9 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                     id="customerName"
                     name="customerName"
                     value={details.customerName}
-                    onChange={(event) => setField("customerName", event.target.value)}
+                    onChange={(event) =>
+                      setField("customerName", event.target.value)
+                    }
                     autoComplete="name"
                     required
                     className="field"
@@ -269,32 +330,14 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="email" className="field-label">
-                    Email address
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={details.email}
-                    onChange={(event) => setField("email", event.target.value)}
-                    autoComplete="email"
-                    required
-                    className="field"
-                    aria-invalid={Boolean(state.errors?.email)}
-                  />
-                  {state.errors?.email && (
-                    <p className="field-error">{state.errors.email}</p>
-                  )}
-                </div>
-                <div className="sm:col-span-2">
                   <label htmlFor="phone" className="field-label">
-                    Phone number
+                    Mobile number
                   </label>
                   <input
                     id="phone"
                     name="phone"
                     type="tel"
+                    inputMode="tel"
                     value={details.phone}
                     onChange={(event) => setField("phone", event.target.value)}
                     autoComplete="tel"
@@ -319,7 +362,7 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label htmlFor="line1" className="field-label">
-                    Address line 1
+                    Complete address
                   </label>
                   <input
                     id="line1"
@@ -330,6 +373,7 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                     required
                     className="field"
                     aria-invalid={Boolean(state.errors?.line1)}
+                    placeholder="House / flat, building, street, area"
                   />
                   {state.errors?.line1 && (
                     <p className="field-error">{state.errors.line1}</p>
@@ -337,7 +381,10 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="line2" className="field-label">
-                    Address line 2 <span className="normal-case tracking-normal text-muted/50">(optional)</span>
+                    Landmark or apartment{" "}
+                    <span className="normal-case tracking-normal text-muted/50">
+                      (optional)
+                    </span>
                   </label>
                   <input
                     id="line2"
@@ -407,7 +454,10 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="notes" className="field-label">
-                    Order notes <span className="normal-case tracking-normal text-muted/50">(optional)</span>
+                    Delivery instructions{" "}
+                    <span className="normal-case tracking-normal text-muted/50">
+                      (optional)
+                    </span>
                   </label>
                   <textarea
                     id="notes"
@@ -417,7 +467,7 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                     value={details.notes}
                     onChange={(event) => setField("notes", event.target.value)}
                     className="field resize-y"
-                    placeholder="Anything we should know about this delivery?"
+                    placeholder="Best time to deliver, gate code, or anything else we should know."
                   />
                 </div>
               </div>
@@ -439,7 +489,7 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                 <span className="flex size-7 items-center justify-center rounded-full bg-forest text-[0.6rem] font-bold text-white">
                   {user && addresses.length > 0 ? "04" : "03"}
                 </span>
-                <h2 className="font-display text-2xl">Payment on WhatsApp</h2>
+                <h2 className="font-display text-2xl">How it works</h2>
               </div>
               <div className="mt-4 border border-[#128c47]/25 bg-[#f1f8f3] p-4">
                 <div className="flex items-start gap-3">
@@ -448,69 +498,46 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-forest">
-                      Send your order to the seller
+                      This is an order enquiry, not a checkout.
                     </p>
                     <p className="mt-1 text-[0.74rem] leading-relaxed text-muted">
-                      We save your order here and open WhatsApp with every item,
-                      the total and your delivery address already written out.
-                      The seller reviews the message and replies with the
-                      payment options.
+                      Nothing is charged here and no order is created on this
+                      website. We open WhatsApp with your products and delivery
+                      details. The seller replies with availability, delivery
+                      charges and payment arrangements.
                     </p>
                   </div>
                 </div>
-                <ol className="mt-3 grid gap-2 border-t border-[#128c47]/15 pt-3 text-[0.66rem] leading-relaxed text-muted sm:grid-cols-3">
-                  <li>
-                    <span className="block text-[0.52rem] font-bold uppercase tracking-[0.13em] text-[#128c47]">
-                      01 · Send
-                    </span>
-                    Your order message opens in WhatsApp.
-                  </li>
-                  <li>
-                    <span className="block text-[0.52rem] font-bold uppercase tracking-[0.13em] text-[#128c47]">
-                      02 · Pay
-                    </span>
-                    The seller shares the payment options in chat.
-                  </li>
-                  <li>
-                    <span className="block text-[0.52rem] font-bold uppercase tracking-[0.13em] text-[#128c47]">
-                      03 · Dispatch
-                    </span>
-                    Your order is packed and sent after payment.
-                  </li>
-                </ol>
               </div>
             </div>
 
-            <label className="flex items-start gap-2.5 text-[0.72rem] leading-relaxed text-muted">
-              <input
-                type="checkbox"
-                required
-                className="mt-0.5 size-4 accent-forest"
-              />
-              <span>
-                I agree to the{" "}
-                <Link href="/policies/terms" className="underline underline-offset-2 hover:text-forest">
-                  terms &amp; conditions
-                </Link>
-                ,{" "}
-                <Link href="/policies/returns" className="underline underline-offset-2 hover:text-forest">
-                  return policy
-                </Link>{" "}
-                and{" "}
-                <Link href="/policies/privacy" className="underline underline-offset-2 hover:text-forest">
-                  privacy policy
-                </Link>
-                .
-              </span>
-            </label>
+            <div>
+              <label className="flex items-start gap-2.5 text-[0.74rem] leading-relaxed text-muted">
+                <input
+                  type="checkbox"
+                  name="acknowledgement"
+                  required
+                  className="mt-0.5 size-4 accent-forest"
+                  aria-invalid={Boolean(state.errors?.acknowledgement)}
+                />
+                <span>
+                  I understand this is an enquiry. OMNEXA will confirm
+                  availability, delivery charges and payment directly on
+                  WhatsApp, and no payment is collected on this website.
+                </span>
+              </label>
+              {state.errors?.acknowledgement && (
+                <p className="field-error">{state.errors.acknowledgement}</p>
+              )}
+            </div>
 
             <div className="flex items-start gap-2 border border-line bg-white px-4 py-3 text-[0.66rem] leading-relaxed text-muted">
               <MapPin className="mt-0.5 size-3.5 shrink-0 text-forest/45" />
               <p>
                 Product details, photography and catalogue prices are
-                demonstration data. Your order message is sent to OMNEXA on
-                WhatsApp, where availability, delivery and payment are confirmed
-                before dispatch.
+                demonstration data. Your delivery details are only included in
+                the WhatsApp message you choose to send. The cart stays saved in
+                your bag.
               </p>
             </div>
           </div>
@@ -518,7 +545,7 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
           <aside className="order-2 lg:sticky lg:top-28 lg:self-start">
             <div className="border border-line bg-white">
               <div className="border-b border-line px-5 py-4">
-                <p className="eyebrow text-forest/50">Order summary</p>
+                <p className="eyebrow text-forest/50">Your enquiry</p>
               </div>
               <ul className="max-h-[360px] space-y-4 overflow-y-auto px-5 py-5">
                 {cart.map((line) => (
@@ -556,16 +583,18 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
               </ul>
               <div className="space-y-2.5 border-t border-line px-5 py-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted">Subtotal</span>
+                  <span className="text-muted">Estimated products</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted">Delivery</span>
-                  <span>{delivery === 0 ? "Complimentary" : formatPrice(delivery)}</span>
+                  <span className="text-muted">Estimated delivery</span>
+                  <span>
+                    {delivery === 0 ? "Complimentary" : formatPrice(delivery)}
+                  </span>
                 </div>
                 <div className="flex items-baseline justify-between border-t border-line pt-3">
                   <span className="text-[0.7rem] font-bold uppercase tracking-[0.13em] text-forest">
-                    Total
+                    Estimated total
                   </span>
                   <span className="font-display text-2xl">
                     {formatPrice(total)}
@@ -574,34 +603,35 @@ export function CheckoutForm({ addresses }: { addresses: Address[] }) {
               </div>
               <div className="border-t border-line px-5 py-4">
                 <p className="mb-3 text-[0.65rem] leading-relaxed text-muted">
-                  Payment is arranged directly with the seller on WhatsApp.
+                  The final total is confirmed by the seller on WhatsApp.
                   Nothing is charged on this website.
                 </p>
                 <button
                   type="submit"
-                  disabled={pending}
+                  disabled={pending || !whatsappConfigured}
                   className="btn btn-forest w-full"
                 >
                   {pending ? (
                     <>
-                      <Loader2 className="size-4 animate-spin" /> Saving your
-                      order…
+                      <Loader2 className="size-4 animate-spin" /> Preparing your
+                      message…
+                    </>
+                  ) : !whatsappConfigured ? (
+                    <>
+                      <WhatsAppIcon className="size-4" /> WhatsApp ordering
+                      unavailable
                     </>
                   ) : (
                     <>
-                      Continue on WhatsApp · {formatPrice(total)}
+                      <WhatsAppIcon className="size-4" /> Open WhatsApp ·{" "}
+                      {formatPrice(total)}
                       <ArrowRight className="size-3.5" />
                     </>
                   )}
                 </button>
-                <div className="mt-3 flex items-center justify-center gap-3 text-[0.58rem] uppercase tracking-[0.1em] text-muted/55">
-                  <span className="flex items-center gap-1">
-                    <ShieldCheck className="size-3" /> Secure
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <WhatsAppIcon className="size-3" /> WhatsApp handoff
-                  </span>
-                </div>
+                <p className="mt-3 text-center text-[0.62rem] leading-relaxed text-muted">
+                  Order enquiry only · No payment collected here
+                </p>
               </div>
             </div>
           </aside>

@@ -42,8 +42,8 @@ export default async function AccountLayout({
                 Hello, <span className="italic text-lime">{firstName}.</span>
               </h1>
               <p className="mt-3 max-w-lg text-[0.86rem] leading-relaxed text-white/50">
-                Your orders, saved pieces, delivery details and account
-                preferences — gathered in one quiet place.
+                Your saved pieces, delivery details, browsing history and
+                account preferences — gathered in one quiet place.
               </p>
             </div>
             <div className="flex items-center gap-2 text-[0.58rem] uppercase tracking-[0.14em] text-white/35">

@@ -28,7 +28,8 @@ export function LoginForm({
         <span className="italic text-forest/65">your cabinet.</span>
       </h1>
       <p className="mt-4 text-[0.88rem] leading-relaxed text-muted">
-        Your bag, wishlist, addresses and order history — all in one place.
+        Your bag, wishlist, delivery addresses and browsing history — all in one
+        place.
       </p>
 
       {state.status === "error" && state.message && (

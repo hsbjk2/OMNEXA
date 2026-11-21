@@ -197,9 +197,9 @@ export default function AboutPage() {
           <div className="text-[0.82rem] leading-relaxed text-white/45">
             <p>
               Every screen you see is a functioning store — accounts, bag,
-              wishlist, checkout, admin. The seeded products, prices and stock
-              are clearly labelled demonstration data, and the photography is
-              licensed stand-in imagery.
+              wishlist, WhatsApp enquiries and admin. The seeded products,
+              prices and stock are clearly labelled demonstration data, and the
+              photography is licensed stand-in imagery.
             </p>
             <Link
               href="/credits"

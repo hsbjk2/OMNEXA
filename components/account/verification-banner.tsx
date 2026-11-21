@@ -21,8 +21,8 @@ export function VerificationBanner({ email }: { email: string }) {
           </p>
           <p className="mt-1 text-[0.76rem] leading-relaxed text-[#756532]">
             We sent a verification link to <span className="font-medium">{email}</span>.
-            Verifying it helps us reach you about orders and keeps your account
-            secure.
+            Verifying it helps us reach you about your enquiries and keeps your
+            account secure.
           </p>
 
           {state.status === "success" && (
