@@ -239,6 +239,15 @@ export function SettingsForm({
               hint="Public channel only. Leave blank to hide the channel link."
             />
             <Input
+              label="WhatsApp catalogue URL"
+              name="whatsappCatalogueUrl"
+              type="url"
+              defaultValue={settings.whatsappCatalogueUrl}
+              placeholder="https://wa.me/c/…"
+              error={state.errors?.whatsappCatalogueUrl}
+              hint="Public WhatsApp catalogue link. Leave blank to hide the catalogue buttons."
+            />
+            <Input
               label="Amazon storefront URL"
               name="amazonUrl"
               type="url"

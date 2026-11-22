@@ -250,6 +250,7 @@ export const settingsAdminSchema = z.object({
   mapLink: z.string().trim().max(2000).optional().or(z.literal("")),
   googleBusinessUrl: z.string().trim().max(2000).optional().or(z.literal("")),
   whatsappChannelUrl: z.string().trim().max(500).optional().or(z.literal("")),
+  whatsappCatalogueUrl: z.string().trim().max(500).optional().or(z.literal("")),
   instagramUrl: z.string().trim().max(500).optional().or(z.literal("")),
   facebookUrl: z.string().trim().max(500).optional().or(z.literal("")),
   amazonUrl: z.string().trim().max(500).optional().or(z.literal("")),

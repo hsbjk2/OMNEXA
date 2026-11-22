@@ -85,6 +85,16 @@ export default async function ContactPage({
                     Message on WhatsApp <ArrowRight className="size-3.5" />
                   </a>
                 )}
+                {settings.whatsappCatalogueUrl && (
+                  <a
+                    href={settings.whatsappCatalogueUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-quiet"
+                  >
+                    View catalogue on WhatsApp <ArrowUpRight className="size-3.5" />
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -158,6 +168,25 @@ export default async function ContactPage({
                       <p className="mt-0.5 text-[0.62rem] uppercase tracking-[0.1em] text-muted/55">
                         Enquiries &amp; further details
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {settings.whatsappCatalogueUrl && (
+                  <div className="flex items-start gap-3">
+                    <WhatsAppIcon className="mt-0.5 size-4 shrink-0 text-forest/40" />
+                    <div>
+                      <p className="text-[0.72rem] font-semibold text-ink">
+                        WhatsApp catalogue
+                      </p>
+                      <a
+                        href={settings.whatsappCatalogueUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-muted transition hover:text-forest"
+                      >
+                        View the full catalogue
+                      </a>
                     </div>
                   </div>
                 )}

@@ -16,6 +16,7 @@ export type StoreSettings = {
   mapLink: string;
   googleBusinessUrl: string;
   whatsappChannelUrl: string;
+  whatsappCatalogueUrl: string;
   instagramUrl: string;
   facebookUrl: string;
   amazonUrl: string;
@@ -25,6 +26,18 @@ export type StoreSettings = {
   directionsUrl: string;
 };
 
+const DEFAULT_CONTACT_EMAIL =
+  process.env.STORE_CONTACT_EMAIL || "omnexaenterprise@gmail.com";
+const DEFAULT_WHATSAPP = process.env.STORE_WHATSAPP || "+91 80599 12655";
+const DEFAULT_FLIPKART_URL =
+  process.env.FLIPKART_STORE_URL ||
+  "https://www.flipkart.com/sellers?pid=ERGHZTUJKZFZVXEF&utm";
+const DEFAULT_WHATSAPP_CHANNEL_URL =
+  process.env.WHATSAPP_CHANNEL_URL ||
+  "https://whatsapp.com/channel/0029VbD0oy79sBI5P6MSla0d";
+const DEFAULT_WHATSAPP_CATALOGUE_URL =
+  process.env.WHATSAPP_CATALOGUE_URL || "https://wa.me/c/918059912655";
+
 const defaults = {
   businessName: "OMNEXA",
   addressLine1: "",
@@ -32,17 +45,18 @@ const defaults = {
   city: "",
   state: "",
   pincode: "",
-  contactEmail: process.env.STORE_CONTACT_EMAIL || "care@omnexa.example",
-  contactPhone: "",
-  whatsapp: "",
+  contactEmail: DEFAULT_CONTACT_EMAIL,
+  contactPhone: DEFAULT_WHATSAPP,
+  whatsapp: DEFAULT_WHATSAPP,
   mapEmbedUrl: "",
   mapLink: "",
   googleBusinessUrl: "",
-  whatsappChannelUrl: "",
+  whatsappChannelUrl: DEFAULT_WHATSAPP_CHANNEL_URL,
+  whatsappCatalogueUrl: DEFAULT_WHATSAPP_CATALOGUE_URL,
   instagramUrl: "",
   facebookUrl: "",
   amazonUrl: process.env.AMAZON_STORE_URL || "",
-  flipkartUrl: process.env.FLIPKART_STORE_URL || "",
+  flipkartUrl: DEFAULT_FLIPKART_URL,
 };
 
 export const getSiteSettings = cache(async (): Promise<StoreSettings> => {
@@ -68,13 +82,16 @@ export const getSiteSettings = cache(async (): Promise<StoreSettings> => {
     state: record?.state || "",
     pincode: record?.pincode || "",
     contactEmail:
-      record?.contactEmail || defaults.contactEmail || "care@omnexa.example",
-    contactPhone: record?.contactPhone || "",
-    whatsapp: record?.whatsapp || "",
+      record?.contactEmail || defaults.contactEmail || DEFAULT_CONTACT_EMAIL,
+    contactPhone: record?.contactPhone || defaults.contactPhone,
+    whatsapp: record?.whatsapp || defaults.whatsapp,
     mapEmbedUrl: record?.mapEmbedUrl || "",
     mapLink: record?.mapLink || "",
     googleBusinessUrl: record?.googleBusinessUrl || "",
-    whatsappChannelUrl: record?.whatsappChannelUrl || "",
+    whatsappChannelUrl:
+      record?.whatsappChannelUrl || defaults.whatsappChannelUrl,
+    whatsappCatalogueUrl:
+      record?.whatsappCatalogueUrl || defaults.whatsappCatalogueUrl,
     instagramUrl: record?.instagramUrl || "",
     facebookUrl: record?.facebookUrl || "",
     amazonUrl: record?.amazonUrl || defaults.amazonUrl,
@@ -108,6 +125,9 @@ export const getSiteSettings = cache(async (): Promise<StoreSettings> => {
       : "",
     whatsappChannelUrl: isValidHttpUrl(merged.whatsappChannelUrl)
       ? merged.whatsappChannelUrl
+      : "",
+    whatsappCatalogueUrl: isValidHttpUrl(merged.whatsappCatalogueUrl)
+      ? merged.whatsappCatalogueUrl
       : "",
   };
 });

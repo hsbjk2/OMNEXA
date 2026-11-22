@@ -577,15 +577,23 @@ async function main() {
       city: "Sirsa",
       state: "Haryana",
       pincode: "125055",
-      contactEmail: process.env.STORE_CONTACT_EMAIL || "care@omnexa.example",
-      whatsapp: "+91 86076 83463",
+      contactEmail:
+        process.env.STORE_CONTACT_EMAIL || "omnexaenterprise@gmail.com",
+      contactPhone: "+91 80599 12655",
+      whatsapp: "+91 80599 12655",
       mapEmbedUrl:
         "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3443.9!2d75.0416858!3d29.5058874!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39114d0016f49a8f%3A0x1b8a04f2c46b11ea!2sOMNEXA%20ENTERPRISE!5e0!3m2!1sen!2sin!4v1700000000000",
       mapLink: "https://share.google/MhimXAOk4LDnQzeDP",
       googleBusinessUrl: "https://share.google/s0gMtvmi6xFHP8yib",
-      whatsappChannelUrl: "",
+      whatsappChannelUrl:
+        process.env.WHATSAPP_CHANNEL_URL ||
+        "https://whatsapp.com/channel/0029VbD0oy79sBI5P6MSla0d",
+      whatsappCatalogueUrl:
+        process.env.WHATSAPP_CATALOGUE_URL || "https://wa.me/c/918059912655",
       amazonUrl: process.env.AMAZON_STORE_URL || "",
-      flipkartUrl: process.env.FLIPKART_STORE_URL || "",
+      flipkartUrl:
+        process.env.FLIPKART_STORE_URL ||
+        "https://www.flipkart.com/sellers?pid=ERGHZTUJKZFZVXEF&utm",
     },
   });
 

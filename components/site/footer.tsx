@@ -7,6 +7,7 @@ import {
   Navigation,
   Phone,
   ShieldCheck,
+  ShoppingBag,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/logo";
 import {
@@ -95,6 +96,17 @@ export function Footer({
                   className="flex size-9 items-center justify-center rounded-full border border-white/15 text-white/65 transition hover:border-lime hover:text-lime"
                 >
                   <MessageCircle className="size-4" strokeWidth={1.5} />
+                </a>
+              )}
+              {settings.whatsappCatalogueUrl && (
+                <a
+                  href={settings.whatsappCatalogueUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label="View the OMNEXA catalogue on WhatsApp"
+                  className="flex size-9 items-center justify-center rounded-full border border-white/15 text-white/65 transition hover:border-lime hover:text-lime"
+                >
+                  <ShoppingBag className="size-4" strokeWidth={1.5} />
                 </a>
               )}
               <a
@@ -197,6 +209,28 @@ export function Footer({
                     </a>
                     <p className="mt-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.13em] text-lime/70">
                       WhatsApp · enquiries &amp; further details
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {settings.whatsappCatalogueUrl && (
+                <div className="flex items-start gap-2.5">
+                  <ShoppingBag
+                    className="mt-0.5 size-4 shrink-0 text-lime/80"
+                    strokeWidth={1.5}
+                  />
+                  <div>
+                    <a
+                      href={settings.whatsappCatalogueUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="font-medium text-white/80 transition hover:text-white"
+                    >
+                      View catalogue on WhatsApp
+                    </a>
+                    <p className="mt-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.13em] text-lime/70">
+                      WhatsApp · full collection
                     </p>
                   </div>
                 </div>

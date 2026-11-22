@@ -2,7 +2,7 @@ import { formatPrice } from "@/lib/utils";
 
 /**
  * Normalises an Indian phone number into the international digits that wa.me
- * expects. The store settings may hold "+91 86076 83463", "8607683463" or an
+ * expects. The store settings may hold "+91 80599 12655", "8059912655" or an
  * already-normalised value, so accept all three.
  */
 export function whatsAppDigits(raw: string) {

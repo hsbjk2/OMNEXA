@@ -153,6 +153,9 @@ export default async function AccountOverviewPage({
   const flipkartUrl = isValidHttpUrl(settings.flipkartUrl)
     ? settings.flipkartUrl
     : null;
+  const whatsappCatalogueUrl = isValidHttpUrl(settings.whatsappCatalogueUrl)
+    ? settings.whatsappCatalogueUrl
+    : null;
 
   const stats = [
     {
@@ -490,6 +493,19 @@ export default async function AccountOverviewPage({
                 className="btn btn-outline justify-between"
               >
                 Flipkart storefront <ExternalLink className="size-3.5" />
+              </a>
+            )}
+            {whatsappCatalogueUrl && (
+              <a
+                href={whatsappCatalogueUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline justify-between"
+              >
+                <span className="flex items-center gap-2">
+                  <WhatsAppIcon className="size-4" /> WhatsApp catalogue
+                </span>
+                <ExternalLink className="size-3.5" />
               </a>
             )}
             {whatsappHref && (

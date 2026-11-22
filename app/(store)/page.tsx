@@ -61,6 +61,12 @@ export default async function HomePage() {
       configured: isValidHttpUrl(settings.flipkartUrl),
       note: "Our Flipkart seller storefront",
     },
+    {
+      name: "WhatsApp",
+      url: settings.whatsappCatalogueUrl,
+      configured: isValidHttpUrl(settings.whatsappCatalogueUrl),
+      note: "Browse the full catalogue in WhatsApp",
+    },
   ];
 
   const whatsappHref =
@@ -477,6 +483,17 @@ export default async function HomePage() {
                     <p className="text-center text-[0.66rem] tracking-[0.02em] text-white/35">
                       {settings.whatsapp}
                     </p>
+                  )}
+                  {settings.whatsappCatalogueUrl && (
+                    <a
+                      href={settings.whatsappCatalogueUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="flex w-full items-center justify-center gap-2 border border-white/20 px-4 py-3 text-[0.62rem] font-bold uppercase tracking-[0.14em] text-white/75 transition hover:border-lime/60 hover:text-lime"
+                    >
+                      <WhatsAppIcon className="size-4" />
+                      View catalogue on WhatsApp
+                    </a>
                   )}
                   <div className="flex flex-wrap gap-2 pt-1">
                     {settings.mapLink && (
