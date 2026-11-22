@@ -17,6 +17,8 @@
   "dependencies": {
     "@prisma/adapter-d1": "^6.19.3",
     "@prisma/client": "6.19.3",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.2",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "framer-motion": "^14.14.0",
