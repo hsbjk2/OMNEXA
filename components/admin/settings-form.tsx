@@ -218,8 +218,9 @@ export function SettingsForm({
               name="instagramUrl"
               type="url"
               defaultValue={settings.instagramUrl}
-              placeholder="https://instagram.com/…"
+              placeholder="https://www.instagram.com/…"
               error={state.errors?.instagramUrl}
+              hint="Official OMNEXA Instagram profile. Leave blank to hide the icon."
             />
             <Input
               label="Facebook URL"

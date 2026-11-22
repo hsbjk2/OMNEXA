@@ -220,7 +220,7 @@ model SiteSettings {
   googleBusinessUrl String @default("")
   whatsappChannelUrl String @default("https://whatsapp.com/channel/0029VbD0oy79sBI5P6MSla0d")
   whatsappCatalogueUrl String @default("https://wa.me/c/918059912655")
-  instagramUrl   String   @default("")
+  instagramUrl   String   @default("https://www.instagram.com/omnexa.in/")
   facebookUrl    String   @default("")
   amazonUrl      String   @default("")
   flipkartUrl    String   @default("https://www.flipkart.com/sellers?pid=ERGHZTUJKZFZVXEF&utm")

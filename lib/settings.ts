@@ -37,6 +37,8 @@ const DEFAULT_WHATSAPP_CHANNEL_URL =
   "https://whatsapp.com/channel/0029VbD0oy79sBI5P6MSla0d";
 const DEFAULT_WHATSAPP_CATALOGUE_URL =
   process.env.WHATSAPP_CATALOGUE_URL || "https://wa.me/c/918059912655";
+const DEFAULT_INSTAGRAM_URL =
+  process.env.INSTAGRAM_URL || "https://www.instagram.com/omnexa.in/";
 
 const defaults = {
   businessName: "OMNEXA",
@@ -53,7 +55,7 @@ const defaults = {
   googleBusinessUrl: "",
   whatsappChannelUrl: DEFAULT_WHATSAPP_CHANNEL_URL,
   whatsappCatalogueUrl: DEFAULT_WHATSAPP_CATALOGUE_URL,
-  instagramUrl: "",
+  instagramUrl: DEFAULT_INSTAGRAM_URL,
   facebookUrl: "",
   amazonUrl: process.env.AMAZON_STORE_URL || "",
   flipkartUrl: DEFAULT_FLIPKART_URL,
@@ -92,7 +94,7 @@ export const getSiteSettings = cache(async (): Promise<StoreSettings> => {
       record?.whatsappChannelUrl || defaults.whatsappChannelUrl,
     whatsappCatalogueUrl:
       record?.whatsappCatalogueUrl || defaults.whatsappCatalogueUrl,
-    instagramUrl: record?.instagramUrl || "",
+    instagramUrl: record?.instagramUrl || defaults.instagramUrl,
     facebookUrl: record?.facebookUrl || "",
     amazonUrl: record?.amazonUrl || defaults.amazonUrl,
     flipkartUrl: record?.flipkartUrl || defaults.flipkartUrl,
@@ -129,5 +131,6 @@ export const getSiteSettings = cache(async (): Promise<StoreSettings> => {
     whatsappCatalogueUrl: isValidHttpUrl(merged.whatsappCatalogueUrl)
       ? merged.whatsappCatalogueUrl
       : "",
+    instagramUrl: isValidHttpUrl(merged.instagramUrl) ? merged.instagramUrl : "",
   };
 });
