@@ -32,6 +32,16 @@ export const registerSchema = z.object({
   password,
 });
 
+export const registrationEmailSchema = z.object({ email });
+
+export const registrationOtpSchema = z.object({
+  email,
+  otp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Enter the six-digit code from your email."),
+});
+
 export const forgotPasswordSchema = z.object({ email });
 
 export const resetPasswordSchema = z.object({

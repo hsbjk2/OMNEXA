@@ -79,12 +79,11 @@ function getD1Client() {
 
 function getClient() {
   const configured = process.env.OMNEXA_DATABASE?.trim().toLowerCase();
+  const isProduction = process.env.NODE_ENV === "production";
 
   if (configured === "sqlite") {
-    if (getCloudflareEnv()?.DB) {
-      console.warn(
-        "[db] OMNEXA_DATABASE=sqlite overrides the available Cloudflare D1 binding.",
-      );
+    if (isProduction) {
+      throw new Error("[db] SQLite is disabled in production.");
     }
     return getSqliteClient();
   }
@@ -92,22 +91,27 @@ function getClient() {
   if (configured === "d1") {
     const client = getD1Client();
     if (!client) {
-      throw new Error(
-        "[db] OMNEXA_DATABASE=d1 was requested but no Cloudflare D1 binding named DB is available.",
-      );
+      throw new Error("[db] D1 binding DB is unavailable.");
     }
     return client;
   }
 
   if (configured && configured !== "auto") {
-    console.warn(
-      `[db] Unknown OMNEXA_DATABASE value "${configured}"; falling back to auto detection.`,
+    console.warn(`[db] Unknown OMNEXA_DATABASE value "${configured}".`);
+  }
+
+  const d1Client = getD1Client();
+
+  if (d1Client) return d1Client;
+
+  if (isProduction) {
+    throw new Error(
+      "[db] Cloudflare D1 is unavailable. Refusing SQLite fallback in production.",
     );
   }
 
-  return getD1Client() ?? getSqliteClient();
+  return getSqliteClient();
 }
-
 /**
  * A Prisma client that selects the Cloudflare D1 binding when the app runs on
  * Workers and falls back to the local SQLite database for `next dev`/`next start`.

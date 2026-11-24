@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { AUTH_COOKIE, OAUTH_STATE_COOKIE, SESSION_DAYS } from "@/lib/constants";
 
@@ -230,12 +230,107 @@ export async function findOrCreateGoogleUser(input: {
   });
 }
 
-export async function setOAuthStateCookie(state: string) {
+export type OAuthProvider = "google" | "facebook";
+
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
+  );
+}
+
+export async function findOrCreateFacebookUser(input: {
+  facebookSub: string;
+  email?: string | null;
+  name?: string | null;
+  picture?: string | null;
+}): Promise<
+  | { user: User }
+  | { error: "facebook-email-missing" | "facebook-link" }
+> {
+  const facebookSub = input.facebookSub.trim();
+  if (!facebookSub) return { error: "facebook-email-missing" };
+
+  // Facebook returns the stable user id with every authorization, so a linked
+  // account is the primary lookup and works even when the email changes.
+  const linked = await prisma.user.findUnique({ where: { facebookSub } });
+  if (linked) return { user: linked };
+
+  const email = input.email?.trim().toLowerCase();
+  if (!email) return { error: "facebook-email-missing" };
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    if (existing.facebookSub && existing.facebookSub !== facebookSub) {
+      return { error: "facebook-link" };
+    }
+
+    try {
+      const user = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          facebookSub,
+          // Facebook's Graph API does not expose an email-verified flag, so
+          // linking it must not silently upgrade an unverified address.
+          image: existing.image ?? input.picture ?? null,
+        },
+      });
+      return { user };
+    } catch (error) {
+      // Another account already owns this Facebook id. Never sign into that
+      // account just because the email matched this one; require a manual
+      // resolution instead.
+      if (isUniqueConstraintError(error)) return { error: "facebook-link" };
+      throw error;
+    }
+  }
+
+  try {
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name: input.name?.trim() || email.split("@")[0],
+        image: input.picture ?? null,
+        facebookSub,
+        // Facebook does not tell us whether the address is verified. Leave
+        // emailVerified unset until a separate verification proves it.
+        role: "CUSTOMER",
+      },
+    });
+    return { user };
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      // A concurrent first sign-in may have created the same Facebook account.
+      // Only reuse it when the email also matches; otherwise report a link
+      // conflict rather than authenticating an unrelated user.
+      const raced = await prisma.user.findUnique({ where: { facebookSub } });
+      if (raced && raced.email.toLowerCase() === email) {
+        return { user: raced };
+      }
+      return { error: "facebook-link" };
+    }
+    throw error;
+  }
+}
+
+export async function setOAuthStateCookie(input: {
+  provider: OAuthProvider;
+  state: string;
+  next?: string;
+}) {
   const store = await cookies();
-  store.set(OAUTH_STATE_COOKIE, state, {
+  const origin = process.env.APP_ORIGIN || process.env.APP_URL || "";
+  const secure =
+    origin.startsWith("https://") || process.env.NODE_ENV === "production";
+
+  store.set(OAUTH_STATE_COOKIE, JSON.stringify(input), {
     httpOnly: true,
+    // Both providers return the authorization result with a top-level GET
+    // redirect, so Lax is sufficient and works with local HTTP development.
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     maxAge: 10 * 60,
   });
@@ -253,4 +348,10 @@ export async function clearOAuthStateCookie() {
 
 export function isGoogleAuthConfigured() {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+}
+
+export function isFacebookAuthConfigured() {
+  return Boolean(
+    process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET,
+  );
 }

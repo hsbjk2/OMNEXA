@@ -1,7 +1,10 @@
+
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { ensureDatabase } from "@/lib/d1";
 import { AdminShell } from "@/components/admin/admin-shell";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: {
@@ -27,3 +30,4 @@ export default async function AdminLayout({
     </AdminShell>
   );
 }
+

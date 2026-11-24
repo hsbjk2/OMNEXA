@@ -9,7 +9,7 @@
     "enable_ctx_exports"
   ],
   "assets": {
-    "directory": "freebuff-sites-build/assets",
+    "directory": ".open-next/assets",
     "binding": "ASSETS",
     "run_worker_first": true
   },

@@ -1,15 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { isGoogleAuthConfigured, setOAuthStateCookie } from "@/lib/auth";
-import { absoluteUrl } from "@/lib/utils";
+import { absoluteUrl, safeRedirectPath } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-function safeNext(value: string | null) {
-  if (!value) return "";
-  if (!value.startsWith("/") || value.startsWith("//")) return "";
-  return value;
-}
 
 export async function GET(request: Request) {
   if (!isGoogleAuthConfigured()) {
@@ -17,10 +11,10 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const next = safeNext(searchParams.get("next"));
+  const next = safeRedirectPath(searchParams.get("next")) ?? "";
   const state = randomBytes(24).toString("base64url");
 
-  await setOAuthStateCookie(JSON.stringify({ state, next }));
+  await setOAuthStateCookie({ provider: "google", state, next });
 
   const redirectUri = absoluteUrl("/api/auth/google/callback");
   const params = new URLSearchParams({

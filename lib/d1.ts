@@ -25,6 +25,35 @@ export function getCloudflareEnv(): CloudflareEnv | null {
 
 let databaseReady: Promise<void> | null = null;
 
+// New tables must be created explicitly on databases that already have the
+// seed marker, because the full schema is only run for a brand-new D1 database.
+// Keep this list in sync with tables added to prisma/schema.prisma after the
+// first deployment.
+const TABLE_MIGRATIONS = [
+  `CREATE TABLE IF NOT EXISTS "PendingRegistration" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "passwordHash" TEXT NOT NULL,
+    "otpHash" TEXT NOT NULL,
+    "expiresAt" DATETIME NOT NULL,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "lastSentAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "PendingRegistration_email_key" ON "PendingRegistration" ("email")`,
+  `CREATE INDEX IF NOT EXISTS "PendingRegistration_expiresAt_idx" ON "PendingRegistration" ("expiresAt")`,
+  `CREATE INDEX IF NOT EXISTS "PendingRegistration_lastSentAt_idx" ON "PendingRegistration" ("lastSentAt")`,
+  `CREATE TABLE IF NOT EXISTS "RateLimit" (
+    "key" TEXT NOT NULL PRIMARY KEY,
+    "count" INTEGER NOT NULL DEFAULT 0,
+    "resetAt" DATETIME NOT NULL,
+    "updatedAt" DATETIME NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS "RateLimit_resetAt_idx" ON "RateLimit" ("resetAt")`,
+];
+
 // `CREATE TABLE IF NOT EXISTS` never adds columns to a table that already
 // exists. D1 databases seeded by an earlier release therefore keep their old
 // shape until each new column is added explicitly. Keep this list in sync with
@@ -33,6 +62,11 @@ const COLUMN_MIGRATIONS: Record<
   string,
   { name: string; definition: string }[]
 > = {
+  User: [
+    // Facebook returns a stable user id with every authorization, which is
+    // used to recognise returning users when their email address changes.
+    { name: "facebookSub", definition: `"facebookSub" TEXT` },
+  ],
   Product: [
     { name: "amazonUrl", definition: `"amazonUrl" TEXT` },
     { name: "flipkartUrl", definition: `"flipkartUrl" TEXT` },
@@ -48,6 +82,13 @@ const COLUMN_MIGRATIONS: Record<
     },
   ],
 };
+
+// `ALTER TABLE ... ADD COLUMN` cannot add a UNIQUE constraint, so indexes that
+// back a Prisma `@unique` column added after the first release are created
+// explicitly. `IF NOT EXISTS` keeps this idempotent.
+const INDEX_MIGRATIONS = [
+  `CREATE UNIQUE INDEX IF NOT EXISTS "User_facebookSub_key" ON "User" ("facebookSub")`,
+];
 
 // Prisma's local SQLite connector stores DateTime values as integer
 // milliseconds, while the D1 driver adapter writes and expects ISO-8601 text
@@ -68,6 +109,8 @@ async function runStatements(db: D1Database, statements: string[]) {
 }
 
 async function applyColumnMigrations(db: D1Database) {
+  await runStatements(db, TABLE_MIGRATIONS);
+
   for (const [table, migrations] of Object.entries(COLUMN_MIGRATIONS)) {
     const { results } = await db
       .prepare(`PRAGMA table_info("${table}")`)
@@ -80,6 +123,18 @@ async function applyColumnMigrations(db: D1Database) {
           .prepare(`ALTER TABLE "${table}" ADD COLUMN ${migration.definition}`)
           .run();
       }
+    }
+  }
+
+  const userTable = await db
+    .prepare(
+      `SELECT "name" FROM "sqlite_master" WHERE "type" = 'table' AND "name" = 'User'`,
+    )
+    .first();
+
+  if (userTable) {
+    for (const statement of INDEX_MIGRATIONS) {
+      await db.prepare(statement).run();
     }
   }
 }
