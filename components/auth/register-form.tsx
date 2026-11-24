@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowRight,
@@ -9,21 +10,84 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  MailCheck,
 } from "lucide-react";
 import { registerAction } from "@/app/actions/auth";
 import { initialActionState } from "@/lib/action-state";
+import { SocialLogin } from "@/components/auth/social-login";
 
-export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
+const STRENGTH_LABELS = ["Too short", "Weak", "Fair", "Good", "Strong"];
+
+function passwordScore(password: string) {
+  if (!password) return 0;
+  let score = 0;
+  if (password.length >= 8) score += 1;
+  if (password.length >= 12) score += 1;
+  if (/[A-Za-z]/.test(password) && /[0-9]/.test(password)) score += 1;
+  if (
+    /[^A-Za-z0-9]/.test(password) ||
+    (/[a-z]/.test(password) && /[A-Z]/.test(password))
+  ) {
+    score += 1;
+  }
+  return score;
+}
+
+function strengthColor(score: number) {
+  if (score <= 1) return "bg-wine/60";
+  if (score === 2) return "bg-[#c9a227]";
+  return "bg-forest";
+}
+
+export function RegisterForm({
+  googleEnabled,
+  facebookEnabled,
+  defaultEmail = "",
+}: {
+  googleEnabled: boolean;
+  facebookEnabled: boolean;
+  defaultEmail?: string;
+}) {
   const [state, formAction, pending] = useActionState(
     registerAction,
     initialActionState,
   );
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const redirected = useRef(false);
+
+  const score = passwordScore(password);
+
+  useEffect(() => {
+    if (state.status !== "success" || redirected.current) return;
+
+    const email = state.email ?? defaultEmail;
+    if (!email) return;
+
+    redirected.current = true;
+
+    if (state.devOtp && process.env.NODE_ENV === "development") {
+      try {
+        sessionStorage.setItem(`omnexa:dev-otp:${email}`, state.devOtp);
+      } catch {
+        // Storage can be unavailable in private browsing; the code is still
+        // logged by the development mail preview.
+      }
+    }
+
+    router.replace(`/register/verify?email=${encodeURIComponent(email)}`);
+  }, [defaultEmail, router, state]);
 
   if (state.status === "success") {
+    const email = state.email ?? defaultEmail;
+    const verifyHref = email
+      ? `/register/verify?email=${encodeURIComponent(email)}`
+      : "/register";
+
     return (
       <div>
-        <p className="eyebrow text-forest/45">Account created</p>
+        <p className="eyebrow text-forest/45">Check your inbox</p>
         <h1 className="mt-3 font-display text-[clamp(2.5rem,5vw,3.6rem)] leading-[0.95] tracking-[-0.04em]">
           One small step
           <br />
@@ -31,11 +95,11 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
         </h1>
         <div className="mt-6 flex items-start gap-3 border border-line bg-light/60 p-4">
           <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-forest text-lime">
-            <Check className="size-3.5" strokeWidth={2.4} />
+            <MailCheck className="size-3.5" strokeWidth={2.4} />
           </span>
           <div>
             <p className="text-sm font-medium text-forest">
-              Your account is ready.
+              Your code is on its way.
             </p>
             <p className="mt-1 text-[0.8rem] leading-relaxed text-muted">
               {state.message}
@@ -43,26 +107,13 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
           </div>
         </div>
 
-        {state.devUrl && (
-          <div className="mt-4 border border-dashed border-forest/25 bg-white p-4 text-[0.74rem] leading-relaxed text-muted">
-            <p className="font-semibold text-forest">
-              Development preview
-            </p>
-            <p className="mt-1">
-              Email delivery is not configured, so the verification link is
-              shown here for local testing.
-            </p>
-            <a
-              href={state.devUrl}
-              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-forest underline underline-offset-4"
-            >
-              Open verification link <ArrowRight className="size-3.5" />
-            </a>
-          </div>
-        )}
+        <div className="mt-6 flex items-center gap-2 text-[0.76rem] text-muted">
+          <Loader2 className="size-3.5 animate-spin" />
+          Taking you to the verification page…
+        </div>
 
-        <Link href="/login" className="btn btn-forest mt-6 w-full">
-          Sign in <ArrowRight className="size-3.5" />
+        <Link href={verifyHref} className="btn btn-forest mt-6 w-full">
+          Enter verification code <ArrowRight className="size-3.5" />
         </Link>
       </div>
     );
@@ -119,6 +170,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
             type="email"
             autoComplete="email"
             required
+            defaultValue={defaultEmail}
             className="field"
             placeholder="you@example.com"
             aria-invalid={Boolean(state.errors?.email)}
@@ -138,9 +190,12 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
               className="field pr-11"
               placeholder="At least 8 characters"
               aria-invalid={Boolean(state.errors?.password)}
+              aria-describedby="password-strength"
             />
             <button
               type="button"
@@ -155,6 +210,30 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
               )}
             </button>
           </div>
+
+          <div id="password-strength" className="mt-2.5" aria-live="polite">
+            <div className="flex gap-1.5">
+              {[0, 1, 2, 3].map((index) => (
+                <span
+                  key={index}
+                  className={`h-1 flex-1 transition-colors ${
+                    password && index < score
+                      ? strengthColor(score)
+                      : "bg-line"
+                  }`}
+                />
+              ))}
+            </div>
+            {password && (
+              <p className="mt-1.5 text-[0.68rem] text-muted">
+                Password strength:{" "}
+                <span className="font-semibold text-forest">
+                  {STRENGTH_LABELS[score]}
+                </span>
+              </p>
+            )}
+          </div>
+
           {state.errors?.password ? (
             <p className="field-error">{state.errors.password}</p>
           ) : (
@@ -190,7 +269,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
         >
           {pending ? (
             <>
-              <Loader2 className="size-4 animate-spin" /> Creating account…
+              <Loader2 className="size-4 animate-spin" /> Sending your code…
             </>
           ) : (
             <>
@@ -198,28 +277,18 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
             </>
           )}
         </button>
+
+        <p className="flex items-start gap-2 text-[0.68rem] leading-relaxed text-muted/80">
+          <Check className="mt-0.5 size-3.5 shrink-0 text-forest" />
+          Your account is only created after you verify the six-digit code we
+          email you.
+        </p>
       </form>
 
-      {googleEnabled && (
-        <>
-          <div className="my-6 flex items-center gap-3">
-            <span className="h-px flex-1 bg-line" />
-            <span className="text-[0.58rem] uppercase tracking-[0.15em] text-muted/50">
-              or
-            </span>
-            <span className="h-px flex-1 bg-line" />
-          </div>
-          <a
-            href="/api/auth/google"
-            className="flex h-12 w-full items-center justify-center gap-3 border border-line bg-white text-[0.76rem] font-semibold text-ink transition hover:border-forest"
-          >
-            <span className="flex size-5 items-center justify-center rounded-full border border-forest/15 font-display text-sm text-forest">
-              G
-            </span>
-            Continue with Google
-          </a>
-        </>
-      )}
+      <SocialLogin
+        googleEnabled={googleEnabled}
+        facebookEnabled={facebookEnabled}
+      />
 
       <p className="mt-7 text-center text-[0.8rem] text-muted">
         Already have an account?{" "}

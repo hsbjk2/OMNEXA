@@ -1,3 +1,4 @@
+
 import type { ReactNode } from "react";
 import { prisma } from "@/lib/prisma";
 import { ensureDatabase } from "@/lib/d1";
@@ -15,6 +16,8 @@ import { ScrollProgress } from "@/components/site/scroll-progress";
 import { BackToTop } from "@/components/site/back-to-top";
 import { Toaster } from "@/components/site/toaster";
 import { WhatsAppCta } from "@/components/site/whatsapp-cta";
+
+export const dynamic = "force-dynamic";
 
 export default async function StoreLayout({
   children,
@@ -140,3 +143,4 @@ export default async function StoreLayout({
     </StoreProvider>
   );
 }
+

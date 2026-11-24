@@ -6,7 +6,7 @@ import {
   isGoogleAuthConfigured,
   readOAuthStateCookie,
 } from "@/lib/auth";
-import { absoluteUrl } from "@/lib/utils";
+import { absoluteUrl, safeRedirectPath } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +20,6 @@ type GoogleProfile = {
 
 function failure(reason: string) {
   return NextResponse.redirect(absoluteUrl(`/login?error=${reason}`));
-}
-
-function safeNext(value: unknown) {
-  if (typeof value !== "string") return "";
-  if (!value.startsWith("/") || value.startsWith("//")) return "";
-  return value;
 }
 
 export async function GET(request: Request) {
@@ -42,13 +36,18 @@ export async function GET(request: Request) {
   if (oauthError) return failure("google-cancelled");
   if (!code || !state || !rawCookie) return failure("google-state");
 
-  let expected: { state?: string; next?: string } = {};
+  let expected: { provider?: string; state?: string; next?: string } = {};
   try {
-    expected = JSON.parse(rawCookie) as { state?: string; next?: string };
+    expected = JSON.parse(rawCookie) as {
+      provider?: string;
+      state?: string;
+      next?: string;
+    };
   } catch {
     return failure("google-state");
   }
 
+  if (expected.provider !== "google") return failure("google-state");
   if (!expected.state || expected.state !== state) return failure("google-state");
 
   const redirectUri = absoluteUrl("/api/auth/google/callback");
@@ -97,7 +96,7 @@ export async function GET(request: Request) {
     });
 
     await createSession(user.id);
-    const next = safeNext(expected.next);
+    const next = safeRedirectPath(expected.next) ?? "";
     return NextResponse.redirect(
       absoluteUrl(next || (user.role === "ADMIN" ? "/admin" : "/account")),
     );

@@ -5,14 +5,9 @@ import Link from "next/link";
 import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginAction } from "@/app/actions/auth";
 import { initialActionState } from "@/lib/action-state";
+import { SocialLogin } from "@/components/auth/social-login";
 
-export function LoginForm({
-  next,
-  googleEnabled,
-}: {
-  next?: string;
-  googleEnabled: boolean;
-}) {
+export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState(
     loginAction,
     initialActionState,
@@ -120,28 +115,7 @@ export function LoginForm({
         </button>
       </form>
 
-      {googleEnabled && (
-        <>
-          <div className="my-6 flex items-center gap-3">
-            <span className="h-px flex-1 bg-line" />
-            <span className="text-[0.58rem] uppercase tracking-[0.15em] text-muted/50">
-              or
-            </span>
-            <span className="h-px flex-1 bg-line" />
-          </div>
-          <a
-            href={`/api/auth/google${
-              next ? `?next=${encodeURIComponent(next)}` : ""
-            }`}
-            className="flex h-12 w-full items-center justify-center gap-3 border border-line bg-white text-[0.76rem] font-semibold text-ink transition hover:border-forest"
-          >
-            <span className="flex size-5 items-center justify-center rounded-full border border-forest/15 font-display text-sm text-forest">
-              G
-            </span>
-            Continue with Google
-          </a>
-        </>
-      )}
+      <SocialLogin googleEnabled facebookEnabled next={next} />
 
       <p className="mt-7 text-center text-[0.8rem] text-muted">
         New to OMNEXA?{" "}

@@ -72,6 +72,20 @@ export function absoluteUrl(path = "") {
   return `${base.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/**
+ * Returns a same-origin path suitable for a post-login redirect, or undefined
+ * when the value could be interpreted as an external URL. Backslashes are
+ * normalised to slashes by browsers, so they must be rejected too.
+ */
+export function safeRedirectPath(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  if (!value.startsWith("/") || value.startsWith("//")) return undefined;
+  if (value.includes("\\") || /[\u0000-\u001f\u007f]/.test(value)) {
+    return undefined;
+  }
+  return value;
+}
+
 export function isValidHttpUrl(value: string) {
   if (!value) return false;
   try {

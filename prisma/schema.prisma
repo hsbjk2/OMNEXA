@@ -16,6 +16,10 @@ model User {
   emailVerified    DateTime?
   phone            String?
   image            String?
+  // Facebook's stable user id. It is returned by the Graph API on every
+  // sign-in and is used to recognise returning Facebook users even if the
+  // email address on the account changes.
+  facebookSub      String?             @unique
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   sessions         Session[]
@@ -51,6 +55,36 @@ model VerificationToken {
 
   @@index([email, type])
   @@index([expiresAt])
+}
+
+// A registration only becomes a permanent User after the emailed six-digit
+// code is verified. The password is already hashed; the OTP is stored only as
+// a keyed HMAC digest.
+model PendingRegistration {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  otpHash      String
+  expiresAt    DateTime
+  attempts     Int      @default(0)
+  lastSentAt   DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([expiresAt])
+  @@index([lastSentAt])
+}
+
+// Persistent rate-limit buckets shared by every Worker isolate. The in-memory
+// limiter remains a cheap first layer, but this table is the production guard.
+model RateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
 }
 
 model Address {
